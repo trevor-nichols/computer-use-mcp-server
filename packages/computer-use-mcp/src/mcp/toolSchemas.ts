@@ -39,6 +39,16 @@ export const screenshotSchema = {
   },
 }
 
+export const selectDisplaySchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    displayId: { type: 'integer' },
+    displayName: { type: 'string' },
+    auto: { type: 'boolean' },
+  },
+}
+
 export const zoomSchema = {
   type: 'object',
   additionalProperties: false,

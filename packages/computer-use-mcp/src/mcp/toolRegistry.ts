@@ -8,6 +8,7 @@ import {
   openApplicationSchema,
   pointSchema,
   requestAccessSchema,
+  selectDisplaySchema,
   screenshotSchema,
   scrollSchema,
   typeTextSchema,
@@ -16,6 +17,7 @@ import {
   zoomSchema,
 } from './toolSchemas.js'
 import { requestAccessTool } from '../tools/requestAccess.js'
+import { selectDisplayTool } from '../tools/selectDisplay.js'
 import { screenshotTool } from '../tools/screenshot.js'
 import { zoomTool } from '../tools/zoom.js'
 import { cursorPositionTool } from '../tools/cursorPosition.js'
@@ -49,6 +51,15 @@ function mutatingAnnotations() {
   }
 }
 
+function sessionStateAnnotations() {
+  return {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  }
+}
+
 export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] {
   return [
     {
@@ -71,6 +82,22 @@ export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] 
       inputSchema: screenshotSchema,
       annotations: readonlyAnnotations(),
       handler: createToolHandler(runtime, screenshotTool),
+    },
+    {
+      name: 'select_display',
+      title: 'Select Display',
+      description: 'Pin future screenshot-style tools to a specific display, or clear the explicit pin with auto=true.',
+      inputSchema: selectDisplaySchema,
+      annotations: sessionStateAnnotations(),
+      handler: createToolHandler(runtime, selectDisplayTool),
+    },
+    {
+      name: 'switch_display',
+      title: 'Switch Display',
+      description: 'Compatibility alias for select_display.',
+      inputSchema: selectDisplaySchema,
+      annotations: sessionStateAnnotations(),
+      handler: createToolHandler(runtime, selectDisplayTool),
     },
     {
       name: 'zoom',

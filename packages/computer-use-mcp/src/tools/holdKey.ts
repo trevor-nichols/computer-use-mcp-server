@@ -8,6 +8,10 @@ export interface HoldKeyArgs {
   durationMs: number
 }
 
+function keysContainEscape(keys: string[]): boolean {
+  return keys.some(key => ['escape', 'esc'].includes(key.trim().toLowerCase()))
+}
+
 function keysRequireSystemCombos(keys: string[]): boolean {
   return keys.some(key => key.length > 1 || ['command', 'cmd', 'option', 'alt', 'control', 'ctrl', 'fn', 'tab'].includes(key.toLowerCase()))
 }
@@ -24,6 +28,10 @@ export async function executeHoldKey(
 
   if (keysRequireSystemCombos(args.keys) && !ctx.session.grantFlags.systemKeyCombos) {
     throw new PermissionDeniedError('System key combinations are not granted for this session.')
+  }
+
+  if (keysContainEscape(args.keys)) {
+    await ctx.runtime.nativeHost.hotkeys.markExpectedEscape(ctx.session.sessionId, 1_000)
   }
 
   const pressed: string[] = []

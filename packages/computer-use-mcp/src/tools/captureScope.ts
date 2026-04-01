@@ -4,6 +4,7 @@ import type { ActionScopeOptions } from './actionScope.js'
 export function createCaptureActionScopeOptions(
   config: RuntimeConfig,
   explicitDisplayId?: number,
+  autoTargetDisplay = false,
 ): ActionScopeOptions {
   const hideDisallowedApps = config.hideDisallowedBeforeAction && !config.excludeDisallowedFromScreenshots
 
@@ -12,5 +13,6 @@ export function createCaptureActionScopeOptions(
     hideDisallowedApps,
     excludeDisallowedApps: config.excludeDisallowedFromScreenshots,
     explicitDisplayId,
+    autoTargetDisplay: autoTargetDisplay && explicitDisplayId === undefined,
   }
 }

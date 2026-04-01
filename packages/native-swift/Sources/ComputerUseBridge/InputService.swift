@@ -106,6 +106,7 @@ enum InputService {
     private static func postKey(keyCode: CGKeyCode, down: Bool, flags: CGEventFlags) {
         guard let event = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: down) else { return }
         event.flags = flags
+        SyntheticInputMarker.mark(event)
         event.post(tap: .cghidEventTap)
     }
 

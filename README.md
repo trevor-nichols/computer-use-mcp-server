@@ -18,17 +18,35 @@ This repository implements the first real slice of the clean-room design we docu
 
 - TypeScript MCP server
 - protocol-compatible stdio JSON-RPC transport
-- first six tools:
+- Streamable HTTP transport
+- full current tool surface:
   - `request_access`
   - `screenshot`
+  - `select_display`
+  - `switch_display`
+  - `zoom`
   - `cursor_position`
+  - `mouse_move`
   - `left_click`
+  - `right_click`
+  - `middle_click`
+  - `double_click`
+  - `triple_click`
+  - `left_click_drag`
+  - `scroll`
+  - `key`
+  - `hold_key`
   - `type`
+  - `read_clipboard`
+  - `write_clipboard`
   - `open_application`
+  - `list_granted_applications`
+  - `wait`
+  - `computer_batch`
 - file-backed desktop lock
 - session store
 - fake native mode
-- unit tests and stdio end-to-end test using Node's built-in test runner
+- unit tests and transport end-to-end tests using Node's built-in test runner
 
 ### Implemented for macOS, not compiled here
 
@@ -119,17 +137,15 @@ Optional environment variables:
 What is production-shaped:
 
 - repo structure
-- first transport
-- first tool contracts
+- stdio and Streamable HTTP transports
+- tool contracts and registry
 - session model
 - lock model
 - native bridge seam
-- real macOS helper commands for the first slice
+- real macOS helper commands for the current tool surface
 
 What still needs more work after this pass:
 
 - full approval helper integration by default
-- global Escape abort loop wired end-to-end
-- hide-before-action and cleanup registry
-- drag / scroll / zoom / key / hold-key / batch tools
-- daemon + Streamable HTTP
+- richer approval UI and app-hinting for `request_access`
+- optional `left_mouse_down` / `left_mouse_up` parity work

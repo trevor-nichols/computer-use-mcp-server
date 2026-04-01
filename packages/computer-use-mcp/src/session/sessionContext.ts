@@ -13,7 +13,7 @@ export interface SessionContext {
   grantFlags: GrantFlags
   selectedDisplayId?: number
   displayPinnedByModel: boolean
-  displayResolvedForApps?: number[]
+  displayResolvedForAppsKey?: string
   lastScreenshotDims?: ScreenshotDims
   hiddenDuringTurn: Set<string>
   tccState?: TccState

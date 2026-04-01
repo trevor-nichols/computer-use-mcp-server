@@ -526,7 +526,7 @@ interface ComputerUseSessionState {
   grantFlags: GrantFlags
   selectedDisplayId?: number
   displayPinnedByModel: boolean
-  displayResolvedForApps?: number[]
+  displayResolvedForAppsKey?: string
   lastScreenshotDims?: ScreenshotDims
   hiddenDuringTurn: Set<string>
   tccState?: {
@@ -1013,4 +1013,3 @@ After this spec, create a second document with:
 - a milestone-by-milestone file creation checklist
 
 That should be the direct implementation plan.
-

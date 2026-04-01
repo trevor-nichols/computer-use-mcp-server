@@ -6,13 +6,14 @@ test('capture scope uses screenshot exclusion instead of pre-hiding when both ar
   const options = createCaptureActionScopeOptions({
     hideDisallowedBeforeAction: true,
     excludeDisallowedFromScreenshots: true,
-  } as any, 7)
+  } as any, 7, true)
 
   assert.deepEqual(options, {
     acquireLock: true,
     hideDisallowedApps: false,
     excludeDisallowedApps: true,
     explicitDisplayId: 7,
+    autoTargetDisplay: false,
   })
 })
 
@@ -27,5 +28,21 @@ test('capture scope still hides disallowed apps when screenshot exclusion is dis
     hideDisallowedApps: true,
     excludeDisallowedApps: false,
     explicitDisplayId: undefined,
+    autoTargetDisplay: false,
+  })
+})
+
+test('capture scope can opt screenshot actions into auto-target display resolution', () => {
+  const options = createCaptureActionScopeOptions({
+    hideDisallowedBeforeAction: false,
+    excludeDisallowedFromScreenshots: true,
+  } as any, undefined, true)
+
+  assert.deepEqual(options, {
+    acquireLock: true,
+    hideDisallowedApps: false,
+    excludeDisallowedApps: true,
+    explicitDisplayId: undefined,
+    autoTargetDisplay: true,
   })
 })

@@ -1,6 +1,7 @@
 import { AbortRequestedError } from '../errors/errorTypes.js'
 import type { ToolExecutionContext } from '../mcp/callRouter.js'
 import { CleanupRegistry } from '../session/cleanupRegistry.js'
+import { resolvePreparedDisplayTarget } from './displayTargeting.js'
 
 export interface ActionScopeOptions {
   acquireLock?: boolean
@@ -8,10 +9,12 @@ export interface ActionScopeOptions {
   hideDisallowedApps?: boolean
   excludeDisallowedApps?: boolean
   explicitDisplayId?: number
+  autoTargetDisplay?: boolean
 }
 
 export interface PreparedActionContext {
   targetDisplayId?: number
+  displayResolvedForAppsKey?: string
   excludedBundleIds: string[]
   hiddenBundleIds: string[]
 }
@@ -64,7 +67,11 @@ export async function prepareForAction(
   options: ActionScopeOptions,
 ): Promise<PreparedActionContext> {
   const displays = await ctx.runtime.nativeHost.screenshots.listDisplays()
-  const targetDisplayId = resolveTargetDisplayId(ctx, displays.map(display => display.displayId), options.explicitDisplayId)
+  const displayTarget = await resolvePreparedDisplayTarget(ctx, displays, {
+    explicitDisplayId: options.explicitDisplayId,
+    autoTargetDisplay: options.autoTargetDisplay,
+  })
+  const targetDisplayId = displayTarget.targetDisplayId
 
   let excludedBundleIds: string[] = []
   let hiddenBundleIds: string[] = []
@@ -98,6 +105,7 @@ export async function prepareForAction(
 
   return {
     targetDisplayId,
+    displayResolvedForAppsKey: displayTarget.displayResolvedForAppsKey,
     excludedBundleIds,
     hiddenBundleIds,
   }
@@ -116,26 +124,6 @@ export function filterDisallowedBundleIdsForTargetDisplay(
 
     return targetDisplayId === undefined || displays.includes(targetDisplayId)
   })
-}
-
-export function resolveTargetDisplayId(
-  ctx: ToolExecutionContext,
-  availableDisplayIds: number[],
-  explicitDisplayId?: number,
-): number | undefined {
-  if (explicitDisplayId && availableDisplayIds.includes(explicitDisplayId)) {
-    return explicitDisplayId
-  }
-
-  if (ctx.session.selectedDisplayId && availableDisplayIds.includes(ctx.session.selectedDisplayId)) {
-    return ctx.session.selectedDisplayId
-  }
-
-  if (ctx.session.lastScreenshotDims?.displayId && availableDisplayIds.includes(ctx.session.lastScreenshotDims.displayId)) {
-    return ctx.session.lastScreenshotDims.displayId
-  }
-
-  return availableDisplayIds[0]
 }
 
 export async function throwIfAbortRequested(ctx: ToolExecutionContext): Promise<void> {

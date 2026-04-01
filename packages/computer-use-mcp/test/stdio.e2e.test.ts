@@ -56,6 +56,8 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
   for (const expected of [
     'request_access',
     'screenshot',
+    'select_display',
+    'switch_display',
     'zoom',
     'cursor_position',
     'mouse_move',
@@ -97,6 +99,19 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
     id: 4,
     method: 'tools/call',
     params: {
+      name: 'select_display',
+      arguments: { displayName: 'Fake Display' },
+    },
+  }) + '\n')
+  const selectDisplay = await readResponse()
+  assert.equal(selectDisplay.result.structuredContent.ok, true)
+  assert.equal(selectDisplay.result.structuredContent.selectedDisplayId, 1)
+
+  child.stdin.write(JSON.stringify({
+    jsonrpc: '2.0',
+    id: 5,
+    method: 'tools/call',
+    params: {
       name: 'screenshot',
       arguments: {},
     },
@@ -106,7 +121,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 5,
+    id: 6,
     method: 'tools/call',
     params: {
       name: 'left_click',
@@ -118,7 +133,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 6,
+    id: 7,
     method: 'tools/call',
     params: {
       name: 'type',
@@ -127,6 +142,19 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
   }) + '\n')
   const typeResult = await readResponse()
   assert.equal(typeResult.result.structuredContent.ok, true)
+
+  child.stdin.write(JSON.stringify({
+    jsonrpc: '2.0',
+    id: 8,
+    method: 'tools/call',
+    params: {
+      name: 'switch_display',
+      arguments: { auto: true },
+    },
+  }) + '\n')
+  const autoDisplay = await readResponse()
+  assert.equal(autoDisplay.result.structuredContent.ok, true)
+  assert.equal(autoDisplay.result.structuredContent.mode, 'auto')
 
   child.kill()
 })

@@ -17,7 +17,7 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
 
   return withActionScope(
     ctx,
-    createCaptureActionScopeOptions(ctx.runtime.config, args.displayId),
+    createCaptureActionScopeOptions(ctx.runtime.config, args.displayId, true),
     async ({ prepared }) => {
       const displays = await ctx.runtime.nativeHost.screenshots.listDisplays()
       const display = displays.find(item => item.displayId === prepared.targetDisplayId) ?? displays[0]
@@ -46,6 +46,7 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
         scaleFactor: capture.display.scaleFactor,
       }
       ctx.session.selectedDisplayId = capture.display.displayId
+      ctx.session.displayResolvedForAppsKey = prepared.displayResolvedForAppsKey
 
       return {
         content: [
