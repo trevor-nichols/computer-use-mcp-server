@@ -1,6 +1,6 @@
 import type { ToolExecutionContext } from '../mcp/callRouter.js'
 import { MissingOsPermissionsError } from '../errors/errorTypes.js'
-import { mapScreenshotRectToDesktop } from '../transforms/coordinates.js'
+import { createScreenshotDims, mapScreenshotRectToDesktop } from '../transforms/coordinates.js'
 import { withActionScope } from './actionScope.js'
 import { createCaptureActionScopeOptions } from './captureScope.js'
 import { captureWithFallback } from './captureWithFallback.js'
@@ -35,6 +35,12 @@ export async function zoomTool(ctx: ToolExecutionContext, args: ZoomArgs) {
         jpegQuality: ctx.runtime.config.screenshotJpegQuality,
       })
 
+      const screenshotDims = createScreenshotDims(capture, region)
+
+      ctx.session.lastScreenshotDims = screenshotDims
+      ctx.session.selectedDisplayId = capture.display.displayId
+      ctx.session.displayResolvedForAppsKey = prepared.displayResolvedForAppsKey
+
       return {
         content: [
           { type: 'image', data: capture.dataBase64, mimeType: capture.mimeType },
@@ -44,9 +50,8 @@ export async function zoomTool(ctx: ToolExecutionContext, args: ZoomArgs) {
           ok: true,
           image: capture.dataBase64,
           mimeType: capture.mimeType,
-          width: capture.width,
-          height: capture.height,
-          displayId: capture.display.displayId,
+          ...screenshotDims,
+          excludedBundleIds: prepared.excludedBundleIds,
         },
       }
     },

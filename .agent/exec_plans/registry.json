@@ -1,0 +1,36 @@
+{
+  "plans": [
+    {
+      "breaking": false,
+      "created": "2026-04-01",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260401-001",
+      "kind": "bugfix",
+      "links": {
+        "docs": "",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/01/EP-20260401-001_zoom-coordinate-drift/EP-20260401-001_zoom-coordinate-drift.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "zoom",
+        "coordinates",
+        "screenshots"
+      ],
+      "title": "Fix zoom coordinate drift",
+      "touches": [
+        "api",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-01"
+    }
+  ],
+  "schema_version": 1
+}

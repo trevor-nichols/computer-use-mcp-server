@@ -1,5 +1,6 @@
 import type { ToolExecutionContext } from '../mcp/callRouter.js'
 import { MissingOsPermissionsError } from '../errors/errorTypes.js'
+import { createScreenshotDims } from '../transforms/coordinates.js'
 import { resolveScreenshotTargetSize } from '../transforms/screenshotSizing.js'
 import { withActionScope } from './actionScope.js'
 import { createCaptureActionScopeOptions } from './captureScope.js'
@@ -35,16 +36,9 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
         targetHeight: target.height,
       })
 
-      ctx.session.lastScreenshotDims = {
-        width: capture.width,
-        height: capture.height,
-        displayId: capture.display.displayId,
-        originX: capture.display.originX,
-        originY: capture.display.originY,
-        logicalWidth: capture.display.width,
-        logicalHeight: capture.display.height,
-        scaleFactor: capture.display.scaleFactor,
-      }
+      const screenshotDims = createScreenshotDims(capture)
+
+      ctx.session.lastScreenshotDims = screenshotDims
       ctx.session.selectedDisplayId = capture.display.displayId
       ctx.session.displayResolvedForAppsKey = prepared.displayResolvedForAppsKey
 
@@ -64,14 +58,7 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
           ok: true,
           image: capture.dataBase64,
           mimeType: capture.mimeType,
-          width: capture.width,
-          height: capture.height,
-          displayId: capture.display.displayId,
-          originX: capture.display.originX,
-          originY: capture.display.originY,
-          logicalWidth: capture.display.width,
-          logicalHeight: capture.display.height,
-          scaleFactor: capture.display.scaleFactor,
+          ...screenshotDims,
           excludedBundleIds: prepared.excludedBundleIds,
         },
       }

@@ -1,5 +1,25 @@
-import type { CursorPosition, ScreenshotDims } from '../native/bridgeTypes.js'
+import type { CaptureResult, CursorPosition, ScreenshotDims } from '../native/bridgeTypes.js'
 import { CoordinateTransformError } from '../errors/errorTypes.js'
+
+export interface LogicalCaptureRegion {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export function createScreenshotDims(capture: CaptureResult, logicalRegion?: LogicalCaptureRegion): ScreenshotDims {
+  return {
+    width: capture.width,
+    height: capture.height,
+    displayId: capture.display.displayId,
+    originX: logicalRegion?.x ?? capture.display.originX,
+    originY: logicalRegion?.y ?? capture.display.originY,
+    logicalWidth: logicalRegion?.width ?? capture.display.width,
+    logicalHeight: logicalRegion?.height ?? capture.display.height,
+    scaleFactor: capture.display.scaleFactor,
+  }
+}
 
 export function mapScreenshotPointToDesktop(point: CursorPosition, dims?: ScreenshotDims): CursorPosition {
   if (!dims) {
