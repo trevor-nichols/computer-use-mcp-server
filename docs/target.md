@@ -1,347 +1,113 @@
-You do **not** need to copy Claude Code’s host-internal `.call()` interception. For a reusable standalone MCP server, your direct `tools/call` path is the right choice.
+This target is for a **production-grade standalone computer-use MCP server**, not Claude-wire parity.
 
-What you **do** need to add depends on the target:
+The current codebase already has:
 
-* **Target A:** production-grade standalone computer-use MCP
-* **Target B:** near-Claude-Code behavior parity
+- direct `tools/call` execution
+- a working Swift-native input bridge
+- `select_display` and `switch_display`
+- display pinning and app-aware auto-targeting
+- `CGEventTap`-based Escape abort with a fallback monitor
 
-For both targets, these are the real missing pieces.
+Those are **not** the remaining gaps.
+
+What still needs attention for standalone production is below.
 
 ## Add these first
 
-### 1. Finish the native input layer properly
+### 1. Fix zoom-to-action coordinate drift
 
-Right now your biggest structural gap is that `packages/native-input/` is still a placeholder, while real input is living in `InputService.swift`.
-
-What to add:
-
-* a real `native-input` package with:
-
-  * mouse move
-  * mouse button press/release/click
-  * vertical + horizontal scroll
-  * key sequence
-  * key down/up
-  * text typing
-  * cursor position
-  * **frontmost app info**
-* broader key support:
-
-  * function keys
-  * page up/down
-  * home/end
-  * modifier-only presses
-  * more symbols and navigation keys
-
-Where:
-
-* `packages/native-input/src/*`
-* `packages/computer-use-mcp/src/native/bridgeTypes.ts`
-* `packages/computer-use-mcp/src/native/swiftBridge.ts`
-
-Why:
-
-* Claude clearly separates input from screenshot/app/system work.
-* More importantly, you need **frontmost app** support and richer input semantics. That is part of their safety model, not just package purity.
-
-## 2. Replace the Escape observer with a real consuming Escape abort
-
-Your current `HotkeyService.swift` uses `NSEvent.addGlobalMonitorForEvents(...)`.
-
-That is not equivalent.
+Right now full screenshots persist coordinate metadata in session state, but zoom captures do not update that state. As a result, actions taken from a zoomed image can still map against the previous full-screen capture.
 
 What to add:
 
-* `CGEventTap`-based Escape interception
-* consume Escape while computer use is active
-* keep the “expected Escape” hole so model-generated Escape does not trigger abort
+- persist zoom capture dimensions and logical geometry the same way full screenshots do
+- ensure post-zoom click, drag, move, and region math map back through the zoomed capture, not the stale prior screenshot
+- add tests that validate click/drag accuracy after at least one zoom step
 
 Where:
 
-* `packages/native-swift/Sources/ComputerUseBridge/HotkeyService.swift`
-* bridge methods in `BridgeMain.swift`
+- `packages/computer-use-mcp/src/tools/zoom.ts`
+- `packages/computer-use-mcp/src/tools/screenshot.ts`
+- `packages/computer-use-mcp/src/transforms/coordinates.ts`
+- action tools that consume `lastScreenshotDims`
 
 Why:
 
-* This is one of Claude’s stronger safety behaviors.
-* Your current version can **see** Escape, but it does not **own** Escape.
+- this is the biggest correctness gap still present in the current implementation
+- coordinate drift turns an otherwise safe automation system into a flaky one
 
-## 3. Add real frontmost / under-cursor safety
+## 2. Add frontmost / under-cursor safety gates
 
-You are missing the main guardrails Claude relies on when display prep is imperfect.
+The current pre-action flow hides or excludes disallowed apps, but it does not verify the actual target app immediately before sending input.
 
 What to add:
 
-* `getFrontmostApp()`
-* `appUnderPoint(x, y)`
-* guardrails before click/drag/type so actions do not land on the wrong app silently
+- `getFrontmostApp()`
+- `appUnderPoint(x, y)`
+- a pre-action safety check for click, drag, type, and possibly key/scroll depending on the target semantics
+- explicit fail-closed behavior when the active or under-cursor app is outside the granted set
 
 Where:
 
-* native side:
-
-  * `packages/native-input/src/frontmost.rs` or equivalent
-  * `packages/native-swift/Sources/ComputerUseBridge/AppService.swift`
-* server side:
-
-  * `packages/computer-use-mcp/src/tools/actionScope.ts`
-  * probably a new safety module, for example `src/safety/frontmostGate.ts`
+- native side:
+  - `packages/native-swift/Sources/ComputerUseBridge/AppService.swift`
+  - bridge plumbing in `BridgeMain.swift`
+  - `packages/computer-use-mcp/src/native/bridgeTypes.ts`
+  - `packages/computer-use-mcp/src/native/swiftBridge.ts`
+- server side:
+  - `packages/computer-use-mcp/src/tools/actionScope.ts`
+  - likely a dedicated safety helper such as `src/tools/frontmostGate.ts`
 
 Why:
 
-* Claude explicitly keeps a frontmost-app safety backstop.
-* Without this, a failed app-switch or wrong z-order can still send real input somewhere unsafe.
+- hiding/excluding apps is helpful, but it is not a complete safety backstop
+- if app activation or z-order is wrong, input can still land on the wrong target
 
-## 4. Implement the full display targeting model
+## 3. Add host/self-awareness to capture and hide flows
 
-You already have session fields for:
-
-* `selectedDisplayId`
-* `displayPinnedByModel`
-* `displayResolvedForApps`
-
-But they are mostly scaffolded, not fully alive.
+The server tracks host/client metadata, but it does not yet model a host application identity inside the desktop-safety layer.
 
 What to add:
 
-* `switch_display` tool
-* pin/unpin behavior
-* `"auto"` behavior
-* display resolution based on allowed apps
-* fallback when a pinned display disappears
-* persistent display selection semantics across screenshot/action calls
+- a runtime concept of host bundle identity
+- host exemption from hide/unhide flows
+- host exclusion from screenshot capture where supported
+- host-aware activation behavior so the host does not accidentally become the click target
 
 Where:
 
-* `packages/computer-use-mcp/src/mcp/toolSchemas.ts`
-* `packages/computer-use-mcp/src/mcp/toolRegistry.ts`
-* probably new `packages/computer-use-mcp/src/tools/switchDisplay.ts`
-* `packages/computer-use-mcp/src/tools/actionScope.ts`
-* `packages/native-swift/Sources/ComputerUseBridge/DisplayService.swift`
-* `packages/native-swift/Sources/ComputerUseBridge/AppService.swift`
+- a new runtime/helper layer, for example:
+  - `packages/computer-use-mcp/src/runtime/hostIdentity.ts`
+- wire into:
+  - `packages/computer-use-mcp/src/tools/actionScope.ts`
+  - `packages/computer-use-mcp/src/tools/captureScope.ts`
+  - `packages/computer-use-mcp/src/tools/captureWithFallback.ts`
+  - screenshot capture options / native bridge plumbing
 
 Why:
 
-* Claude’s multi-display behavior is more than “remember last display.”
-* It has model pinning, auto-resolve, and recovery semantics.
+- a standalone server still needs to avoid hiding or photographing its own host unnecessarily
+- without this, terminal-hosted and embedded-host usage can behave unpredictably
 
-## 5. Add the full pre-action preparation layer
+## 4. Broaden native key support as a focused follow-up
 
-Your current `withActionScope` hides/excludes apps, but Claude’s flow is richer.
+The Swift input bridge exists and covers the core path, but its key map is still relatively narrow.
 
 What to add:
 
-* `prepareDisplay(...)`
-* `previewHideSet(...)`
-* `resolvePrepareCapture(...)`
-* host-aware hide exemption
-* activation ordering that does not let the host app eat the click
-* better display-aware hide resolution
+- function keys
+- page up/down
+- home/end
+- more navigation and symbol keys
+- verify modifier-only key down/up behavior stays explicit and testable
 
 Where:
 
-* native side:
-
-  * `packages/native-swift/Sources/ComputerUseBridge/AppService.swift`
-  * `ScreenshotService.swift`
-  * `DisplayService.swift`
-* server side:
-
-  * `packages/computer-use-mcp/src/tools/actionScope.ts`
-  * `captureScope.ts`
-  * `captureWithFallback.ts`
+- `packages/native-swift/Sources/ComputerUseBridge/InputService.swift`
+- `packages/computer-use-mcp/src/native/bridgeTypes.ts` if bridge types need extension
+- targeted tests for key behavior
 
 Why:
 
-* Claude does not just “hide some apps then act.”
-* It resolves the display, prepares z-order, excludes the host, and only then captures or clicks.
-
-## 6. Add host/self-awareness
-
-This is a real missing layer in your version.
-
-What to add:
-
-* a host bundle ID concept
-* host exclusion from screenshot capture
-* host exemption from hide/unhide
-* host-aware activation skipping
-* a surrogate host concept for terminal or embedded host cases
-
-Where:
-
-* new common/runtime layer, for example:
-
-  * `packages/computer-use-mcp/src/runtime/hostIdentity.ts`
-* wire into:
-
-  * `actionScope.ts`
-  * screenshot capture options
-  * app prep logic
-
-Why:
-
-* Claude’s CLI version does a lot of work to avoid photographing or hiding its own host and to avoid the terminal being the accidental active target.
-* A generic server still needs this, just in a more abstract form.
-
-## 7. Tighten the screenshot sizing + coordinate model
-
-Your current model is directionally correct, but it is simpler than Claude’s.
-
-What to add:
-
-* deterministic target-size pipeline, not just “scale to max dimension”
-* persistent logical size + display origin + scale factor on every capture
-* exact reverse mapping for clicks/drags/zoom regions
-* test coverage for resized output vs applied coordinates
-
-Where:
-
-* `packages/computer-use-mcp/src/transforms/screenshotSizing.ts`
-* `packages/computer-use-mcp/src/transforms/coordinates.ts`
-* `packages/computer-use-mcp/src/tools/screenshot.ts`
-* `packages/computer-use-mcp/src/tools/zoom.ts`
-
-Why:
-
-* Coordinate drift is where these systems get flaky.
-* Claude is clearly optimizing to keep screenshot size and action coordinates in the same model-facing space.
-
-## 8. Fill out the missing tool surface
-
-For near-Claude parity, your tool list is still short in a few important places.
-
-Add:
-
-* `switch_display`
-* `left_mouse_down`
-* `left_mouse_up`
-
-Consider adding compatibility aliases for Claude-style argument shapes:
-
-* `coordinate: [x, y]`
-* `start_coordinate: [x, y]`
-* `bundle_id`
-* `region: [x, y, w, h]`
-* `direction`
-* `amount`
-* `duration`
-
-Where:
-
-* `packages/computer-use-mcp/src/mcp/toolSchemas.ts`
-* `packages/computer-use-mcp/src/mcp/toolRegistry.ts`
-* new tool files where needed
-
-Why:
-
-* Your current schema is fine for your own protocol.
-* It is not Claude-wire-compatible.
-
-## 9. Make batch truly first-class
-
-Your batch tool is good, but it still depends on the limitations of the current primitive set.
-
-What to add:
-
-* support batched `left_mouse_down` / `left_mouse_up`
-* modifier-aware clicks
-* better abort checks between every subaction
-* frontmost safety checks inside the batch
-* optional per-batch display pin / temporary display context
-
-Where:
-
-* `packages/computer-use-mcp/src/tools/batch.ts`
-
-Why:
-
-* Once you add the missing primitives, batch becomes much more useful and much closer to how real agents behave.
-
----
-
-## What can stay different
-
-These do **not** need to change unless you want literal Claude-Code architecture parity.
-
-### Keep your standalone MCP execution model
-
-Claude’s host interception is tied to being embedded in a specific app.
-
-Your direct server approach is better for a reusable MCP server.
-
-### Keep helper-process native bridging if it is stable
-
-Claude needs run-loop pumping because it is calling native modules in-process.
-
-You moved that boundary into a helper process. That is a valid design.
-
-Just make sure:
-
-* main-thread/macOS event work is actually safe inside the helper
-* timeouts are solid
-* long-lived hotkey registration is robust
-
-### Keep host-callback approval support
-
-That is a good addition for a reusable MCP server.
-
-Claude’s inline React approval UI is host-specific. Yours does not need to copy that.
-
----
-
-## What I would implement next, in order
-
-### Phase 1
-
-* real `native-input`
-* frontmost app API
-* consuming Escape via `CGEventTap`
-
-### Phase 2
-
-* `switch_display`
-* pin/unpin semantics
-* `prepareDisplay`, `previewHideSet`, `resolvePrepareCapture`
-
-### Phase 3
-
-* host/self-awareness layer
-* `appUnderPoint`
-* stronger action safety checks
-
-### Phase 4
-
-* Claude-compatible argument aliases
-* `left_mouse_down`
-* `left_mouse_up`
-* improved batch semantics
-
----
-
-## The blunt version
-
-Your current build is already a decent standalone v1.
-
-To make it **strong**, add:
-
-* real native input
-* consuming Escape abort
-* frontmost-app safety
-* full display switching/resolution
-* pre-action preparation
-* host/self-awareness
-
-To make it **Claude-like**, also add:
-
-* the missing tool surface
-* Claude-style schema compatibility
-* the richer display/host semantics
-
-The single most important gap is this:
-
-**You need a real safety layer around where input is going, not just the ability to send input.**
-
-That means frontmost app, app-under-point, host exclusion, and display prep.
-
-I can turn this into a concrete file-by-file implementation backlog for your monorepo.
+- this is a real capability gap, but it is secondary to the safety and coordinate issues above
+- the priority is better input coverage, not splitting input into a separate package
