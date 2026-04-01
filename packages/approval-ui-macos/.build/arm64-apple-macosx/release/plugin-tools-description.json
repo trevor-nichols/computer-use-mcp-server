@@ -1,0 +1,243 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.ApprovalUIBridge-arm64-apple-macosx26.0-release.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/sources",
+      "importPath" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/Sources/ApprovalUIBridge/main.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "ApprovalUIBridge",
+      "moduleOutputPath" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/Modules/ApprovalUIBridge.swiftmodule",
+      "objects" : [
+        "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/main.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx13.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "8",
+        "-serialize-diagnostics",
+        "-O",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "ApprovalUIBridge_main",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "approval_ui_macos"
+      ],
+      "outputFileMapPath" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/main.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/Modules/ApprovalUIBridge.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/Sources/ApprovalUIBridge/main.swift"
+      ],
+      "tempsPath" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build",
+      "wholeModuleOptimization" : true
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "ApprovalUIBridge" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "ApprovalUIBridge",
+      "-package-name",
+      "approval_ui_macos",
+      "-c",
+      "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/Sources/ApprovalUIBridge/main.swift",
+      "-I",
+      "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx13.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "8",
+      "-serialize-diagnostics",
+      "-O",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "ApprovalUIBridge_main",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "approval_ui_macos",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "ApprovalUIBridge" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/Sources/ApprovalUIBridge/main.swift"
+        }
+      ],
+      "outputFilePath" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/sources"
+    },
+    "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.build/main.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/ApprovalUIBridge.product/Objects.LinkFileList"
+    },
+    "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Volumes/AGENAI/Coding/public-github/computer-use-mcp-server/packages/approval-ui-macos/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

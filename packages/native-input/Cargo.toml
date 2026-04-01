@@ -1,0 +1,8 @@
+[package]
+name = "computer_use_input_placeholder"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "computer_use_input_placeholder"
+path = "src/lib.rs"

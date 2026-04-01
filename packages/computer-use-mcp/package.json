@@ -1,0 +1,8 @@
+{
+  "name": "@agenai/computer-use-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "../../dist/computer-use-mcp/src/main.js",
+  "types": "../../dist/computer-use-mcp/src/main.d.ts"
+}
