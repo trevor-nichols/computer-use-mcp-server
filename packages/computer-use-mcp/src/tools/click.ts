@@ -4,6 +4,7 @@ import { MissingOsPermissionsError } from '../errors/errorTypes.js'
 import { mapScreenshotPointToDesktop } from '../transforms/coordinates.js'
 import type { ActionExecutionContext } from './actionScope.js'
 import { withActionScope } from './actionScope.js'
+import { ensureAppUnderPointAllowed } from './frontmostGate.js'
 
 export interface ClickArgs {
   x: number
@@ -44,6 +45,7 @@ export async function performClick(
     }
 
     const mapped = mapScreenshotPointToDesktop({ x: args.x, y: args.y }, ctx.session.lastScreenshotDims)
+    await ensureAppUnderPointAllowed(ctx, mapped, `${button}_click`)
     await helpers.throwIfAbortRequested()
     await ctx.runtime.nativeHost.input.moveMouse(mapped.x, mapped.y)
     await helpers.delayWithAbort(ctx.runtime.config.clickSettleMs)

@@ -3,6 +3,7 @@ import { MissingOsPermissionsError } from '../errors/errorTypes.js'
 import { mapScreenshotPointToDesktop } from '../transforms/coordinates.js'
 import type { ActionExecutionContext } from './actionScope.js'
 import { withActionScope } from './actionScope.js'
+import { ensureAppUnderPointAllowed } from './frontmostGate.js'
 
 export interface ScrollArgs {
   x: number
@@ -22,6 +23,7 @@ export async function executeScroll(
   }
 
   const mapped = mapScreenshotPointToDesktop({ x: args.x, y: args.y }, ctx.session.lastScreenshotDims)
+  await ensureAppUnderPointAllowed(ctx, mapped, 'scroll')
   await ctx.runtime.nativeHost.input.moveMouse(mapped.x, mapped.y)
   await scope.throwIfAbortRequested()
   await ctx.runtime.nativeHost.input.scroll(args.dx, args.dy)

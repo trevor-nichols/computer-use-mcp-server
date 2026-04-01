@@ -52,6 +52,13 @@ function createFakeScreenshotBridge(): ScreenshotBridge {
 }
 
 function createFakeAppBridge(logger: Logger): AppBridge {
+  const fakeActiveApp = {
+    bundleId: 'com.apple.TextEdit',
+    displayName: 'TextEdit',
+    pid: 100,
+    isFrontmost: true,
+  }
+
   return {
     async listInstalledApps() {
       return [
@@ -61,6 +68,12 @@ function createFakeAppBridge(logger: Logger): AppBridge {
     },
     async listRunningApps() {
       return []
+    },
+    async getFrontmostApp() {
+      return fakeActiveApp
+    },
+    async appUnderPoint() {
+      return fakeActiveApp
     },
     async openApplication(bundleId: string) {
       logger.info('fake openApplication', { bundleId })
@@ -193,6 +206,12 @@ export function createNativeHost(config: RuntimeConfig, logger: Logger): NativeH
       },
       async listRunningApps() {
         return client.send('listRunningApps')
+      },
+      async getFrontmostApp() {
+        return client.send('getFrontmostApp')
+      },
+      async appUnderPoint(x: number, y: number) {
+        return client.send('appUnderPoint', { x, y })
       },
       async openApplication(bundleId: string) {
         await client.send('openApplication', { bundleId })

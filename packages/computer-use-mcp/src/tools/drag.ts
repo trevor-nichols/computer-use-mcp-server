@@ -3,6 +3,7 @@ import { MissingOsPermissionsError } from '../errors/errorTypes.js'
 import { mapScreenshotPointToDesktop } from '../transforms/coordinates.js'
 import type { ActionExecutionContext } from './actionScope.js'
 import { withActionScope } from './actionScope.js'
+import { ensureAppUnderPointAllowed } from './frontmostGate.js'
 
 export interface DragArgs {
   fromX?: number
@@ -26,6 +27,9 @@ export async function executeLeftClickDrag(
       ? mapScreenshotPointToDesktop({ x: args.fromX, y: args.fromY }, ctx.session.lastScreenshotDims)
       : await ctx.runtime.nativeHost.input.getCursorPosition()
   const end = mapScreenshotPointToDesktop({ x: args.toX, y: args.toY }, ctx.session.lastScreenshotDims)
+
+  await ensureAppUnderPointAllowed(ctx, start, 'left_click_drag start')
+  await ensureAppUnderPointAllowed(ctx, end, 'left_click_drag end')
 
   await ctx.runtime.nativeHost.input.moveMouse(start.x, start.y)
   await scope.delayWithAbort(ctx.runtime.config.clickSettleMs)

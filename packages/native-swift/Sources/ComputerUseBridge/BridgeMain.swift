@@ -35,6 +35,15 @@ struct ComputerUseBridgeMain {
         case "listRunningApps":
             return AppService.listRunningApps()
 
+        case "getFrontmostApp":
+            return AppService.getFrontmostApp() ?? NSNull()
+
+        case "appUnderPoint":
+            return AppService.appUnderPoint(
+                x: doubleParam(params, "x") ?? 0,
+                y: doubleParam(params, "y") ?? 0
+            ) ?? NSNull()
+
         case "openApplication":
             guard let bundleId = stringParam(params, "bundleId") else {
                 throw BridgeRuntimeError(message: "bundleId is required")

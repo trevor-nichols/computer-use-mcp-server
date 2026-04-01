@@ -76,6 +76,8 @@ export interface RunningAppInfo {
 export interface AppBridge {
   listInstalledApps(): Promise<InstalledAppInfo[]>
   listRunningApps(): Promise<RunningAppInfo[]>
+  getFrontmostApp(): Promise<RunningAppInfo | null>
+  appUnderPoint(x: number, y: number): Promise<RunningAppInfo | null>
   openApplication(bundleId: string): Promise<void>
   hideApplications(bundleIds: string[]): Promise<string[]>
   unhideApplications(bundleIds: string[]): Promise<void>
