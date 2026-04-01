@@ -292,28 +292,28 @@ Mapped via `toCallToolErrorResult` to:
 ├── packages
 │   ├── approval-ui-macos
 │   │   ├── .build
-│   │   │   └── ... (max depth reached)
+│   │   │   └── ...
 │   │   ├── Sources
-│   │   │   └── ... (max depth reached)
+│   │   │   └── ...
 │   │   └── Package.swift
 │   ├── computer-use-mcp
 │   │   ├── src
-│   │   │   └── ... (max depth reached)
+│   │   │   └── ...
 │   │   ├── test
-│   │   │   └── ... (max depth reached)
+│   │   │   └── ...
 │   │   └── package.json
 │   ├── host-sdk
 │   │   └── src
-│   │       └── ... (max depth reached)
+│   │       └── ...
 │   ├── native-input
 │   │   ├── src
-│   │   │   └── ... (max depth reached)
+│   │   │   └── ...
 │   │   └── Cargo.toml
 │   └── native-swift
 │       ├── .build
-│       │   └── ... (max depth reached)
+│       │   └── ...
 │       ├── Sources
-│       │   └── ... (max depth reached)
+│       │   └── ...
 │       └── Package.swift
 ├── package.json
 ├── tsconfig.base.json
