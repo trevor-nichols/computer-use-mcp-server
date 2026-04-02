@@ -1,11 +1,8 @@
 <project_structure>
 ├── docs
-│   ├── README.md
-│   ├── claude-code-reference-notes.md
 │   ├── macos-computer-use-implementation-plan.md
 │   ├── macos-computer-use-reimplementation-spec.md
-│   ├── macos-computer-use-starter-code-canvas.md
-│   └── target.md
+│   └── macos-computer-use-starter-code-canvas.md
 ├── packages
 │   ├── approval-ui-macos
 │   │   ├── .build
