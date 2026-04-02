@@ -39,6 +39,42 @@ export const screenshotSchema = {
   },
 }
 
+export const displayInfoSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    displayId: { type: 'integer' },
+    name: { type: 'string' },
+    originX: { type: 'number' },
+    originY: { type: 'number' },
+    width: { type: 'number' },
+    height: { type: 'number' },
+    scaleFactor: { type: 'number' },
+    isPrimary: { type: 'boolean' },
+  },
+  required: ['displayId', 'originX', 'originY', 'width', 'height', 'scaleFactor', 'isPrimary'],
+}
+
+export const listDisplaysOutputSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    displayPinnedByModel: { type: 'boolean' },
+    selectedDisplayId: {
+      anyOf: [
+        { type: 'integer' },
+        { type: 'null' },
+      ],
+    },
+    displays: {
+      type: 'array',
+      items: displayInfoSchema,
+    },
+  },
+  required: ['ok', 'displayPinnedByModel', 'selectedDisplayId', 'displays'],
+}
+
 export const selectDisplaySchema = {
   type: 'object',
   additionalProperties: false,

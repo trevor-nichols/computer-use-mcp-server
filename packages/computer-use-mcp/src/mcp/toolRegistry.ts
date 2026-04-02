@@ -6,6 +6,7 @@ import {
   dragSchema,
   holdKeySchema,
   keySchema,
+  listDisplaysOutputSchema,
   openApplicationSchema,
   pointSchema,
   requestAccessSchema,
@@ -33,6 +34,7 @@ import { holdKeyTool } from '../tools/holdKey.js'
 import { typeTextTool } from '../tools/typeText.js'
 import { readClipboardTool, writeClipboardTool } from '../tools/clipboard.js'
 import { openApplicationTool, listGrantedApplicationsTool } from '../tools/applications.js'
+import { listDisplaysTool } from '../tools/displays.js'
 import { waitTool } from '../tools/wait.js'
 import { computerBatchTool } from '../tools/batch.js'
 
@@ -87,17 +89,18 @@ export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] 
       handler: createToolHandler(runtime, screenshotTool),
     },
     {
+      name: 'list_displays',
+      title: 'List Displays',
+      description: 'Return the currently available displays and the session display pin state.',
+      inputSchema: { type: 'object', additionalProperties: false },
+      outputSchema: listDisplaysOutputSchema,
+      annotations: readonlyAnnotations(),
+      handler: createToolHandler(runtime, async ctx => listDisplaysTool(ctx)),
+    },
+    {
       name: 'select_display',
       title: 'Select Display',
       description: 'Pin future screenshot-style tools to a specific display, or clear the explicit pin with auto=true.',
-      inputSchema: selectDisplaySchema,
-      annotations: sessionStateAnnotations(),
-      handler: createToolHandler(runtime, selectDisplayTool),
-    },
-    {
-      name: 'switch_display',
-      title: 'Switch Display',
-      description: 'Compatibility alias for select_display.',
       inputSchema: selectDisplaySchema,
       annotations: sessionStateAnnotations(),
       handler: createToolHandler(runtime, selectDisplayTool),

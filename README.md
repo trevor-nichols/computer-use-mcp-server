@@ -49,8 +49,8 @@ The server does not expose capture delivery through MCP `resources/read`. Screen
 - full current tool surface:
   - `request_access`
   - `screenshot`
+  - `list_displays`
   - `select_display`
-  - `switch_display`
   - `zoom`
   - `capture_metadata`
   - `cursor_position`

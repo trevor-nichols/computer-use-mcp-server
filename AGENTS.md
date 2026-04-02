@@ -99,7 +99,7 @@ Treat these env vars as public contract and keep backward compatibility unless e
 8. Do not break fake mode:
    - Non-macOS development/testing paths must keep functioning.
 9. Keep logs structured and stderr-safe in stdio contexts.
-10. Prefer additive compatibility (`switch_display` alias style) over breaking tool contract changes.
+10. Prefer additive compatibility over breaking tool contract changes.
 
 # 5. KNOWLEDGE FRAMEWORK
 
@@ -175,7 +175,7 @@ Runtime pipeline:
 
 ### Behavioral Compatibility Priorities
 
-- Maintain existing tool names and aliases (`select_display` and `switch_display`).
+- Maintain existing tool names unless an explicit compatibility break is intended and documented.
 - Preserve fake mode behavior for CI/development determinism.
 - Keep Streamable HTTP session and cleanup behavior consistent with current tests.
 

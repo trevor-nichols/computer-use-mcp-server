@@ -61,8 +61,8 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
   for (const expected of [
     'request_access',
     'screenshot',
+    'list_displays',
     'select_display',
-    'switch_display',
     'zoom',
     'capture_metadata',
     'cursor_position',
@@ -105,6 +105,23 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
     id: 4,
     method: 'tools/call',
     params: {
+      name: 'list_displays',
+      arguments: {},
+    },
+  }) + '\n')
+  const listDisplays = await readResponse()
+  assert.equal(listDisplays.result.structuredContent.ok, true)
+  assert.equal(listDisplays.result.structuredContent.displayPinnedByModel, false)
+  assert.equal(listDisplays.result.structuredContent.selectedDisplayId, null)
+  assert.equal(Array.isArray(listDisplays.result.structuredContent.displays), true)
+  assert.equal(listDisplays.result.structuredContent.displays.length, 1)
+  assert.equal(listDisplays.result.structuredContent.displays[0]?.displayId, 1)
+
+  child.stdin.write(JSON.stringify({
+    jsonrpc: '2.0',
+    id: 5,
+    method: 'tools/call',
+    params: {
       name: 'select_display',
       arguments: { displayName: 'Fake Display' },
     },
@@ -115,7 +132,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 5,
+    id: 6,
     method: 'tools/call',
     params: {
       name: 'screenshot',
@@ -132,7 +149,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 6,
+    id: 7,
     method: 'tools/call',
     params: {
       name: 'capture_metadata',
@@ -147,7 +164,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 7,
+    id: 8,
     method: 'tools/call',
     params: {
       name: 'left_click',
@@ -159,7 +176,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 8,
+    id: 9,
     method: 'tools/call',
     params: {
       name: 'type',
@@ -171,10 +188,10 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 9,
+    id: 10,
     method: 'tools/call',
     params: {
-      name: 'switch_display',
+      name: 'select_display',
       arguments: { auto: true },
     },
   }) + '\n')

@@ -54,6 +54,7 @@
 │   │   │   ├── click.ts  # Tools for left, right, middle, and double mouse clicks
 │   │   │   ├── clipboard.ts  # Tools for reading and writing the system clipboard
 │   │   │   ├── cursorPosition.ts  # Tool for retrieving the current mouse cursor coordinates
+│   │   │   ├── displays.ts  # Tool for listing available displays and current display pin state
 │   │   │   ├── displayTargeting.ts  # Logic for automatically determining the best display to target
 │   │   │   ├── drag.ts  # Tool for executing click-and-drag mouse actions
 │   │   │   ├── frontmostGate.ts
@@ -83,6 +84,7 @@
 │   │   ├── escapeHotkey.test.ts  # Tests for escape key abort monitoring
 │   │   ├── hostIdentity.test.ts
 │   │   ├── lock.test.ts  # Tests for the file-based lock manager
+│   │   ├── listDisplays.test.ts  # Tests for the list_displays tool
 │   │   ├── screenshotAutoTarget.test.ts  # Tests for screenshot display auto-targeting
 │   │   ├── screenshotSizing.test.ts  # Tests for screenshot downscaling logic
 │   │   ├── selectDisplay.test.ts  # Tests for the select_display tool

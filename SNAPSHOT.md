@@ -59,6 +59,7 @@
 │   │   │   │   ├── click.ts
 │   │   │   │   ├── clipboard.ts
 │   │   │   │   ├── cursorPosition.ts
+│   │   │   │   ├── displays.ts
 │   │   │   │   ├── displayTargeting.ts
 │   │   │   │   ├── drag.ts
 │   │   │   │   ├── frontmostGate.ts
@@ -91,6 +92,7 @@
 │   │   │   ├── escapeHotkey.test.ts
 │   │   │   ├── hostIdentity.test.ts
 │   │   │   ├── lock.test.ts
+│   │   │   ├── listDisplays.test.ts
 │   │   │   ├── screenshotAutoTarget.test.ts
 │   │   │   ├── screenshotSizing.test.ts
 │   │   │   ├── selectDisplay.test.ts
