@@ -13,6 +13,11 @@ let package = Package(
         .executableTarget(
             name: "ComputerUseBridge",
             path: "Sources/ComputerUseBridge"
+        ),
+        .testTarget(
+            name: "ComputerUseBridgeTests",
+            dependencies: ["ComputerUseBridge"],
+            path: "Tests/ComputerUseBridgeTests"
         )
     ]
 )

@@ -1,11 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import http from 'node:http'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { loadConfig } from '../src/config.js'
 import { createLogger } from '../src/observability/logger.js'
 import { SessionStore } from '../src/session/sessionStore.js'
 import { DesktopLockManager } from '../src/session/lock.js'
 import { createNativeHost } from '../src/native/swiftBridge.js'
+import { CaptureAssetStore } from '../src/assets/captureAssetStore.js'
 import { LocalUiApprovalProvider } from '../src/approvals/localUiProvider.js'
 import { HostCallbackApprovalProvider } from '../src/approvals/hostCallbackProvider.js'
 import { ApprovalCoordinator } from '../src/approvals/approvalCoordinator.js'
@@ -42,15 +46,17 @@ test('streamable HTTP transport can initialize and list tools', async () => {
   config.enableStreamableHttp = true
   config.streamableHttpPort = 0
   const logger = createLogger()
+  const captureAssetStore = new CaptureAssetStore(config.captureAssetRoot, logger)
+  await captureAssetStore.initialize()
   const sessionStore = new SessionStore()
   const lockManager = new DesktopLockManager(config.lockPath + '.http-test')
   const nativeHost = createNativeHost(config, logger)
   const localApprovalProvider = new LocalUiApprovalProvider(config, logger)
   const hostApprovalProvider = new HostCallbackApprovalProvider(config.approvalRequestTimeoutMs, logger)
   const approvalCoordinator = new ApprovalCoordinator(nativeHost, localApprovalProvider, hostApprovalProvider, logger)
-  const runtime = { config, sessionStore, lockManager, approvalCoordinator, nativeHost, logger }
+  const runtime = { config, sessionStore, lockManager, approvalCoordinator, nativeHost, captureAssetStore, logger }
   const server = new ComputerUseMcpServer(runtime)
-  const transport = new StreamableHttpTransport(server, config, sessionStore, logger)
+  const transport = new StreamableHttpTransport(server, config, sessionStore, captureAssetStore, logger)
   await transport.start()
 
   try {
@@ -113,6 +119,7 @@ test('streamable HTTP transport can initialize and list tools', async () => {
     assert.equal(toolNames.includes('zoom'), true)
   } finally {
     await transport.stop()
+    await captureAssetStore.cleanupAll()
   }
 })
 
@@ -122,15 +129,17 @@ test('streamable HTTP transport ignores client session hints for transport routi
   config.enableStreamableHttp = true
   config.streamableHttpPort = 0
   const logger = createLogger()
+  const captureAssetStore = new CaptureAssetStore(config.captureAssetRoot, logger)
+  await captureAssetStore.initialize()
   const sessionStore = new SessionStore()
   const lockManager = new DesktopLockManager(config.lockPath + '.http-session-hint-test')
   const nativeHost = createNativeHost(config, logger)
   const localApprovalProvider = new LocalUiApprovalProvider(config, logger)
   const hostApprovalProvider = new HostCallbackApprovalProvider(config.approvalRequestTimeoutMs, logger)
   const approvalCoordinator = new ApprovalCoordinator(nativeHost, localApprovalProvider, hostApprovalProvider, logger)
-  const runtime = { config, sessionStore, lockManager, approvalCoordinator, nativeHost, logger }
+  const runtime = { config, sessionStore, lockManager, approvalCoordinator, nativeHost, captureAssetStore, logger }
   const server = new ComputerUseMcpServer(runtime)
-  const transport = new StreamableHttpTransport(server, config, sessionStore, logger)
+  const transport = new StreamableHttpTransport(server, config, sessionStore, captureAssetStore, logger)
   await transport.start()
 
   try {
@@ -193,5 +202,137 @@ test('streamable HTTP transport ignores client session hints for transport routi
     assert.equal(Array.isArray(tools.body.result.tools), true)
   } finally {
     await transport.stop()
+    await captureAssetStore.cleanupAll()
+  }
+})
+
+test('streamable HTTP transport returns capture image paths and cleans them up on delete', async () => {
+  process.env.COMPUTER_USE_FAKE = '1'
+  const config = loadConfig()
+  config.enableStreamableHttp = true
+  config.streamableHttpPort = 0
+  config.captureAssetRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'capture-assets-http-'))
+  const logger = createLogger()
+  const captureAssetStore = new CaptureAssetStore(config.captureAssetRoot, logger)
+  await captureAssetStore.initialize()
+  const sessionStore = new SessionStore()
+  const lockManager = new DesktopLockManager(config.lockPath + '.http-resource-test')
+  const nativeHost = createNativeHost(config, logger)
+  const localApprovalProvider = new LocalUiApprovalProvider(config, logger)
+  const hostApprovalProvider = new HostCallbackApprovalProvider(config.approvalRequestTimeoutMs, logger)
+  const approvalCoordinator = new ApprovalCoordinator(nativeHost, localApprovalProvider, hostApprovalProvider, logger)
+  const runtime = { config, sessionStore, lockManager, approvalCoordinator, nativeHost, captureAssetStore, logger }
+  const server = new ComputerUseMcpServer(runtime)
+  const transport = new StreamableHttpTransport(server, config, sessionStore, captureAssetStore, logger)
+  await transport.start()
+
+  const initializeSession = async () => {
+    const init = await requestJson(
+      {
+        method: 'POST',
+        host: config.streamableHttpBindHost,
+        port: transport.port,
+        path: '/mcp',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost',
+        },
+      },
+      {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-11-25',
+          capabilities: {},
+          clientInfo: { name: 'http-resource-test', version: '0.1.0' },
+        },
+      },
+    )
+
+    return String(init.headers['mcp-session-id'])
+  }
+
+  try {
+    const sessionOne = await initializeSession()
+    const screenshot = await requestJson(
+      {
+        method: 'POST',
+        host: config.streamableHttpBindHost,
+        port: transport.port,
+        path: '/mcp',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost',
+          'mcp-session-id': sessionOne,
+        },
+      },
+      {
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tools/call',
+        params: {
+          name: 'screenshot',
+          arguments: {},
+        },
+      },
+    )
+
+    const imagePath = String(screenshot.body.result.structuredContent.imagePath)
+    assert.equal(typeof screenshot.body.result.structuredContent.captureId, 'string')
+    assert.equal((await fs.stat(imagePath)).isFile(), true)
+
+    const sessionTwo = await initializeSession()
+    const screenshotTwo = await requestJson(
+      {
+        method: 'POST',
+        host: config.streamableHttpBindHost,
+        port: transport.port,
+        path: '/mcp',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost',
+          'mcp-session-id': sessionTwo,
+        },
+      },
+      {
+        jsonrpc: '2.0',
+        id: 4,
+        method: 'tools/call',
+        params: {
+          name: 'screenshot',
+          arguments: {},
+        },
+      },
+    )
+
+    const imagePathTwo = String(screenshotTwo.body.result.structuredContent.imagePath)
+    assert.equal((await fs.stat(imagePathTwo)).isFile(), true)
+    assert.notEqual(imagePathTwo, imagePath)
+
+    const deleted = await requestJson(
+      {
+        method: 'DELETE',
+        host: config.streamableHttpBindHost,
+        port: transport.port,
+        path: '/mcp',
+        headers: {
+          origin: 'http://localhost',
+          'mcp-session-id': sessionOne,
+        },
+      },
+    )
+
+    assert.equal(deleted.statusCode, 204)
+    assert.equal(captureAssetStore.listSessionAssets(sessionOne).length, 0)
+    await assert.rejects(fs.stat(imagePath))
+    assert.equal((await fs.stat(imagePathTwo)).isFile(), true)
+  } finally {
+    await transport.stop()
+    await captureAssetStore.cleanupAll()
+    await fs.rm(config.captureAssetRoot, { recursive: true, force: true })
   }
 })

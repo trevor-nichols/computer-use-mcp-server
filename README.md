@@ -2,15 +2,33 @@
 
 Standalone local `computer-use` MCP server for macOS.
 
-This repository implements the first real slice of the clean-room design we documented:
+The current capture flow is optimized for Codex-style agents that can call an image-viewer tool on a local file path.
 
-- standalone MCP server, not embedded in one host
+This repository implements:
+
+- standalone MCP server
 - stdio transport first
 - session-owned state
 - desktop lock
 - permission and app approval coordination
-- real macOS native helper seam for screenshots, TCC, input, apps, and clipboard
+- macOS native helper seam for screenshots, TCC, input, apps, and clipboard
 - fake mode for development and testing on non-macOS hosts
+
+## Capture contract
+
+`screenshot` and `zoom` save the captured image to a session-scoped file and return:
+
+- `structuredContent.imagePath`
+- `structuredContent.captureId`
+- the screenshot geometry metadata used for later coordinate transforms
+
+The intended consumer flow is:
+
+1. call `screenshot` or `zoom`
+2. read `structuredContent.imagePath`
+3. call `view_image(imagePath)`
+
+The server does not expose capture delivery through MCP `resources/read`, and the capture tools do not emit inline base64 image payloads.
 
 ## What is included
 
@@ -120,6 +138,7 @@ Optional environment variables:
 
 - `COMPUTER_USE_FAKE=1`
 - `COMPUTER_USE_LOCK_PATH=/custom/path/desktop.lock`
+- `COMPUTER_USE_CAPTURE_ASSET_ROOT=/custom/path/captures`
 - `COMPUTER_USE_SWIFT_BRIDGE_PATH=/absolute/path/to/ComputerUseBridge`
 - `COMPUTER_USE_APPROVAL_UI_PATH=/absolute/path/to/ApprovalUIBridge`
 
@@ -131,21 +150,3 @@ Optional environment variables:
 - `packages/approval-ui-macos/` — local approval helper executable
 - `packages/host-sdk/` — host callback contract stubs
 - `packages/native-input/` — reserved for a future Rust input port
-
-## Status summary
-
-What is production-shaped:
-
-- repo structure
-- stdio and Streamable HTTP transports
-- tool contracts and registry
-- session model
-- lock model
-- native bridge seam
-- real macOS helper commands for the current tool surface
-
-What still needs more work after this pass:
-
-- full approval helper integration by default
-- richer approval UI and app-hinting for `request_access`
-- optional `left_mouse_down` / `left_mouse_up` parity work

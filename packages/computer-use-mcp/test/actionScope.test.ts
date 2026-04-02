@@ -1,6 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { filterDisallowedBundleIdsForTargetDisplay } from '../src/tools/actionScope.js'
+import { CleanupRegistry } from '../src/session/cleanupRegistry.js'
+import { createSessionContext } from '../src/session/sessionContext.js'
+import {
+  filterDisallowedBundleIdsForTargetDisplay,
+  prepareForAction,
+  sequenceRequiresSystemKeyCombos,
+} from '../src/tools/actionScope.js'
 import { resolveTargetDisplayId } from '../src/tools/displayTargeting.js'
 
 test('filterDisallowedBundleIdsForTargetDisplay keeps only apps with windows on the target display', () => {
@@ -72,4 +78,94 @@ test('resolveTargetDisplayId falls back to the last screenshot display when the 
   )
 
   assert.equal(result, 2)
+})
+
+test('prepareForAction excludes the host from hiding while keeping it in screenshot exclusions', async () => {
+  const session = createSessionContext({
+    sessionId: 'action-scope-host-session',
+    connectionId: 'action-scope-host-connection',
+    approvalMode: 'local-ui',
+  })
+  session.allowedApps = [{ bundleId: 'com.apple.TextEdit', displayName: 'TextEdit' }]
+  session.hostIdentity = {
+    bundleId: 'com.apple.Terminal',
+    displayName: 'Terminal',
+    source: 'initialize-metadata',
+  }
+  session.hostIdentityResolutionAttempted = true
+
+  const hiddenCalls: string[][] = []
+
+  const ctx = {
+    session,
+    runtime: {
+      logger: {
+        debug() {},
+        info() {},
+        warn() {},
+        error() {},
+      },
+      nativeHost: {
+        screenshots: {
+          async listDisplays() {
+            return [{
+              displayId: 1,
+              name: 'Built-in',
+              originX: 0,
+              originY: 0,
+              width: 100,
+              height: 100,
+              scaleFactor: 2,
+              isPrimary: true,
+            }]
+          },
+        },
+        apps: {
+          async listRunningApps() {
+            return [
+              { bundleId: 'com.apple.TextEdit', displayName: 'TextEdit', pid: 1, isFrontmost: true },
+              { bundleId: 'com.apple.Notes', displayName: 'Notes', pid: 2, isFrontmost: false },
+              { bundleId: 'com.apple.Terminal', displayName: 'Terminal', pid: 3, isFrontmost: false },
+            ]
+          },
+          async findWindowDisplays() {
+            return {
+              'com.apple.Notes': [1],
+            }
+          },
+          async hideApplications(bundleIds: string[]) {
+            hiddenCalls.push(bundleIds)
+            return bundleIds
+          },
+          async unhideApplications() {},
+        },
+      },
+    },
+  } as any
+
+  const cleanup = new CleanupRegistry()
+  const prepared = await prepareForAction(ctx, cleanup, {
+    hideDisallowedApps: true,
+    excludeDisallowedApps: true,
+    excludeHostFromScreenshots: true,
+  })
+
+  assert.deepEqual(prepared.excludedBundleIds, ['com.apple.Notes', 'com.apple.Terminal'])
+  assert.deepEqual(prepared.fallbackHideBundleIds, ['com.apple.Notes'])
+  assert.deepEqual(prepared.hiddenBundleIds, ['com.apple.Notes'])
+  assert.equal(prepared.hostBundleId, 'com.apple.Terminal')
+  assert.deepEqual(hiddenCalls, [['com.apple.Notes']])
+})
+
+test('sequenceRequiresSystemKeyCombos recognizes command aliases and function alias tokens', () => {
+  assert.equal(sequenceRequiresSystemKeyCombos('meta+a'), true)
+  assert.equal(sequenceRequiresSystemKeyCombos('super+period'), true)
+  assert.equal(sequenceRequiresSystemKeyCombos('windows+['), true)
+  assert.equal(sequenceRequiresSystemKeyCombos('function+f5'), true)
+})
+
+test('sequenceRequiresSystemKeyCombos keeps plain shifted text sequences out of the grant check', () => {
+  assert.equal(sequenceRequiresSystemKeyCombos('shift+a'), false)
+  assert.equal(sequenceRequiresSystemKeyCombos('a'), false)
+  assert.equal(sequenceRequiresSystemKeyCombos('period'), false)
 })

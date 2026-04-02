@@ -30,6 +30,132 @@
         "docs"
       ],
       "updated": "2026-04-01"
+    },
+    {
+      "breaking": false,
+      "created": "2026-04-01",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260401-002",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/target.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/01/EP-20260401-002_target-app-safety-gates/EP-20260401-002_target-app-safety-gates.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "safety",
+        "applications",
+        "input"
+      ],
+      "title": "Add fail-closed target app safety gates",
+      "touches": [
+        "api",
+        "security",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-01"
+    },
+    {
+      "breaking": false,
+      "created": "2026-04-01",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260401-003",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/target.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/01/EP-20260401-003_host-self-awareness/EP-20260401-003_host-self-awareness.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "host",
+        "safety",
+        "capture"
+      ],
+      "title": "Add host self-awareness to capture and action flows",
+      "touches": [
+        "api",
+        "security",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-01"
+    },
+    {
+      "breaking": false,
+      "created": "2026-04-01",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260401-004",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/target.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/01/EP-20260401-004_native-key-support/EP-20260401-004_native-key-support.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "keyboard",
+        "native",
+        "input"
+      ],
+      "title": "Broaden native key support and make modifier holds explicit",
+      "touches": [
+        "api",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-01"
+    },
+    {
+      "breaking": true,
+      "created": "2026-04-02",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260402-001",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/capture-asset-reference-execution-plan.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": true,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/02/EP-20260402-001_capture-assets/EP-20260402-001_capture-assets.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "capture",
+        "codex",
+        "images"
+      ],
+      "title": "Session-scoped capture files and Codex image-path delivery",
+      "touches": [
+        "api",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-02"
     }
   ],
   "schema_version": 1

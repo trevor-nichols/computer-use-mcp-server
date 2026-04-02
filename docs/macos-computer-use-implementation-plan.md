@@ -1,5 +1,17 @@
 # macOS Computer Use MCP Server Implementation Plan
 
+## Status Note
+
+This is a historical implementation-planning document from the initial buildout.
+
+It is still useful for sequencing, rationale, and earlier contract decisions, but it is not the authoritative description of the current codebase. For the live repository state, use:
+
+- `README.md` for the current runtime overview
+- `SNAPSHOT.md` for the current file layout
+- `docs/capture-asset-reference-execution-plan.md` for the current `imagePath` capture contract
+
+In particular, the current implementation no longer uses the earlier generic capture-delivery ideas that appeared in some planning discussions; `screenshot` and `zoom` now return `structuredContent.imagePath` and are meant to be followed by `view_image(imagePath)`.
+
 ## 1) Objective
 
 Implement a standalone local `computer-use` MCP server for macOS that any compatible agent app can use.
@@ -554,7 +566,6 @@ export const screenshotTool = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      image: { type: 'string' },
       mimeType: { type: 'string' },
       width: { type: 'integer' },
       height: { type: 'integer' },
@@ -565,7 +576,7 @@ export const screenshotTool = {
       logicalHeight: { type: 'number' },
       scaleFactor: { type: 'number' }
     },
-    required: ['image', 'mimeType', 'width', 'height', 'displayId', 'originX', 'originY']
+    required: ['mimeType', 'width', 'height', 'displayId', 'originX', 'originY']
   },
   annotations: {
     readOnlyHint: true,
@@ -1373,4 +1384,3 @@ Create a third canvas document containing:
 - the first end-to-end test harness
 
 That document should be implementation-ready, not architectural.
-

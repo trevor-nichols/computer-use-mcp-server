@@ -11,6 +11,7 @@ export async function captureWithFallback(
 ): Promise<CaptureResult> {
   const hiddenBundleIds = new Set(prepared.hiddenBundleIds)
   const effectiveExcludedBundleIds = prepared.excludedBundleIds.filter(bundleId => !hiddenBundleIds.has(bundleId))
+  const fallbackHideBundleIds = prepared.fallbackHideBundleIds.filter(bundleId => !hiddenBundleIds.has(bundleId))
 
   try {
     return await ctx.runtime.nativeHost.screenshots.capture({
@@ -22,13 +23,14 @@ export async function captureWithFallback(
       throw error
     }
 
-    const hideForFallback = effectiveExcludedBundleIds.filter(bundleId => !hiddenBundleIds.has(bundleId))
+    const hideForFallback = fallbackHideBundleIds
 
     ctx.runtime.logger.warn('falling back to temporary app hiding for screenshot capture', {
       sessionId: ctx.session.sessionId,
       error: error instanceof Error ? error.message : String(error),
       excludedBundleIds: effectiveExcludedBundleIds,
       hideForFallback,
+      hostBundleId: prepared.hostBundleId,
     })
 
     const hiddenForFallback =

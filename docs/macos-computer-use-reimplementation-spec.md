@@ -1,5 +1,17 @@
 # macOS Computer Use Reimplementation Spec
 
+## Status Note
+
+This is a historical reimplementation spec from the earlier multi-client planning phase.
+
+The current repo implementation has diverged in a few important ways:
+
+- the live file layout is documented in `SNAPSHOT.md`
+- the current capture delivery contract is documented in `docs/capture-asset-reference-execution-plan.md`
+- `screenshot` and `zoom` now return `structuredContent.imagePath` for use with `view_image(imagePath)`
+
+Use this document for design rationale and original goals, not as the exact source of truth for the current file tree or capture payload shape.
+
 ## 1) Purpose
 
 Build a clean-room, behavior-compatible macOS computer control system inspired by the architecture observed in Claude Code.

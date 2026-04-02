@@ -2,6 +2,7 @@ import type { ToolExecutionContext } from '../mcp/callRouter.js'
 import { MissingOsPermissionsError, PermissionDeniedError } from '../errors/errorTypes.js'
 import type { ActionExecutionContext } from './actionScope.js'
 import { sequenceContainsEscape, sequenceRequiresSystemKeyCombos, withActionScope } from './actionScope.js'
+import { ensureFrontmostAppAllowed } from './frontmostGate.js'
 
 export interface KeyArgs {
   sequence: string
@@ -21,6 +22,8 @@ export async function executeKey(
   if (sequenceRequiresSystemKeyCombos(args.sequence) && !ctx.session.grantFlags.systemKeyCombos) {
     throw new PermissionDeniedError('System key combinations are not granted for this session.')
   }
+
+  await ensureFrontmostAppAllowed(ctx, 'key')
 
   const repeat = Math.max(1, Math.min(20, args.repeat ?? 1))
   if (sequenceContainsEscape(args.sequence)) {

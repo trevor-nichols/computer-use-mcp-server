@@ -15,6 +15,7 @@ import {
   waitSchema,
   writeClipboardSchema,
   zoomSchema,
+  captureOutputSchema,
 } from './toolSchemas.js'
 import { requestAccessTool } from '../tools/requestAccess.js'
 import { selectDisplayTool } from '../tools/selectDisplay.js'
@@ -78,8 +79,9 @@ export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] 
     {
       name: 'screenshot',
       title: 'Screenshot',
-      description: 'Capture a screenshot of the selected display or the active desktop view.',
+      description: 'Capture a screenshot and return a local image path for use with image-viewer tools.',
       inputSchema: screenshotSchema,
+      outputSchema: captureOutputSchema,
       annotations: readonlyAnnotations(),
       handler: createToolHandler(runtime, screenshotTool),
     },
@@ -102,8 +104,9 @@ export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] 
     {
       name: 'zoom',
       title: 'Zoom Screenshot',
-      description: 'Capture a cropped region from the current display.',
+      description: 'Capture a cropped screenshot region and return a local image path for use with image-viewer tools.',
       inputSchema: zoomSchema,
+      outputSchema: captureOutputSchema,
       annotations: readonlyAnnotations(),
       handler: createToolHandler(runtime, zoomTool),
     },

@@ -1,5 +1,6 @@
 import { createSessionContext, type SessionContext } from './sessionContext.js'
 import type { ApprovalMode, ClientConnection, HostApprovalCapabilities } from '../mcp/transport.js'
+import type { HostIdentity } from '../runtime/hostIdentity.js'
 
 export class SessionStore {
   private readonly sessions = new Map<string, SessionContext>()
@@ -11,6 +12,7 @@ export class SessionStore {
     approvalMode: ApprovalMode
     clientId?: string
     clientName?: string
+    hostIdentity?: HostIdentity
     hostApprovalCapabilities?: HostApprovalCapabilities
     connection?: ClientConnection
   }): SessionContext {
@@ -21,6 +23,10 @@ export class SessionStore {
       if (input.hostSessionId !== undefined) existing.hostSessionId = input.hostSessionId
       if (input.clientId !== undefined) existing.clientId = input.clientId
       if (input.clientName !== undefined) existing.clientName = input.clientName
+      if (input.hostIdentity !== undefined) {
+        existing.hostIdentity = input.hostIdentity
+        existing.hostIdentityResolutionAttempted = true
+      }
       existing.approvalMode = input.approvalMode
       if (input.hostApprovalCapabilities) {
         existing.hostApprovalCapabilities = input.hostApprovalCapabilities

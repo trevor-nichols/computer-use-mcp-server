@@ -1,5 +1,17 @@
 # macOS Computer Use Starter Code Canvas
 
+## Status Note
+
+This starter canvas is a historical bootstrap document. It reflects an earlier thin-slice code shape and intentionally simplified tool payloads.
+
+Use it as a scaffold reference only. For the current repository behavior, prefer:
+
+- `README.md` for the current runtime overview
+- `SNAPSHOT.md` for the current file layout
+- `docs/capture-asset-reference-execution-plan.md` for the current screenshot and zoom output contract
+
+The live server now saves captures to disk and returns `structuredContent.imagePath` for `view_image(imagePath)` instead of relying on inline image payloads in the tool result.
+
 This is the implementation-ready starter for the first thin slice of the standalone local `computer-use` MCP server.
 
 It follows the reimplementation spec and implementation plan, but makes one intentional normalization:
@@ -1226,7 +1238,6 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
     ],
     structuredContent: {
       ok: true,
-      image: capture.dataBase64,
       mimeType: capture.mimeType,
       width: capture.width,
       height: capture.height,
@@ -1755,4 +1766,3 @@ This starter intentionally mirrors the most useful structural lesson from Claude
 - the native boundary is explicit and swappable
 
 That keeps the first implementation usable from any MCP client while leaving room for the later daemon, host callback, and native-app flows.
-

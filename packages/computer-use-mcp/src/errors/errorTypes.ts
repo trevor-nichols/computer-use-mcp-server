@@ -61,6 +61,20 @@ export class AppResolutionError extends Error {
   }
 }
 
+export class TargetApplicationDeniedError extends Error {
+  constructor(message = 'The target application is not granted for this session.') {
+    super(message)
+    this.name = 'TargetApplicationDeniedError'
+  }
+}
+
+export class TargetApplicationResolutionError extends Error {
+  constructor(message = 'Unable to resolve the target application before sending input.') {
+    super(message)
+    this.name = 'TargetApplicationResolutionError'
+  }
+}
+
 export class NativeTimeoutError extends Error {
   constructor(message = 'A native bridge call timed out.') {
     super(message)

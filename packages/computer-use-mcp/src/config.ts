@@ -7,6 +7,7 @@ export interface RuntimeConfig {
   fakeMode: boolean
   repoRoot: string
   lockPath: string
+  captureAssetRoot: string
   protocolVersion: string
   supportedProtocolVersions: string[]
   approvalDefaultMode: 'local-ui' | 'host-callback' | 'hybrid'
@@ -65,6 +66,7 @@ export function loadConfig(): RuntimeConfig {
     fakeMode: parseBoolean(process.env.COMPUTER_USE_FAKE, false),
     repoRoot,
     lockPath: process.env.COMPUTER_USE_LOCK_PATH ?? path.join(home, '.computer-use-mcp', 'desktop.lock'),
+    captureAssetRoot: process.env.COMPUTER_USE_CAPTURE_ASSET_ROOT ?? path.join(home, '.computer-use-mcp', 'assets'),
     protocolVersion: '2025-11-25',
     supportedProtocolVersions: ['2025-03-26', '2025-06-18', '2025-11-25'],
     approvalDefaultMode: (process.env.COMPUTER_USE_APPROVAL_MODE as RuntimeConfig['approvalDefaultMode'] | undefined) ?? 'hybrid',

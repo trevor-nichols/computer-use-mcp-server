@@ -5,6 +5,37 @@ import AppKit
 import CoreGraphics
 
 enum AppService {
+    private static func appPayload(_ app: NSRunningApplication) -> [String: Any]? {
+        guard app.activationPolicy == .regular, let bundleId = app.bundleIdentifier else { return nil }
+        return [
+            "bundleId": bundleId,
+            "displayName": app.localizedName ?? bundleId,
+            "pid": app.processIdentifier,
+            "isFrontmost": app.isActive
+        ]
+    }
+
+    private static func regularRunningApplicationsByPid() -> [pid_t: NSRunningApplication] {
+        NSWorkspace.shared.runningApplications.reduce(into: [pid_t: NSRunningApplication]()) { partial, app in
+            guard app.activationPolicy == .regular else { return }
+            partial[app.processIdentifier] = app
+        }
+    }
+
+    private static func windowBounds(_ window: [String: Any]) -> CGRect? {
+        guard
+            let bounds = window[kCGWindowBounds as String] as? [String: Any],
+            let x = bounds["X"] as? Double,
+            let y = bounds["Y"] as? Double,
+            let width = bounds["Width"] as? Double,
+            let height = bounds["Height"] as? Double
+        else {
+            return nil
+        }
+
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+
     static func listInstalledApps() -> [[String: Any]] {
         let roots = ["/Applications", "/System/Applications"]
         var results: [[String: Any]] = []
@@ -26,15 +57,45 @@ enum AppService {
     }
 
     static func listRunningApps() -> [[String: Any]] {
-        NSWorkspace.shared.runningApplications.compactMap { app in
-            guard app.activationPolicy == .regular, let bundleId = app.bundleIdentifier else { return nil }
-            return [
-                "bundleId": bundleId,
-                "displayName": app.localizedName ?? bundleId,
-                "pid": app.processIdentifier,
-                "isFrontmost": app.isActive
-            ]
+        NSWorkspace.shared.runningApplications.compactMap(appPayload)
+    }
+
+    static func getFrontmostApp() -> [String: Any]? {
+        if let app = NSWorkspace.shared.frontmostApplication, let payload = appPayload(app) {
+            return payload
         }
+
+        if let app = NSWorkspace.shared.runningApplications.first(where: { $0.isActive }),
+           let payload = appPayload(app) {
+            return payload
+        }
+
+        return nil
+    }
+
+    static func appUnderPoint(x: Double, y: Double) -> [String: Any]? {
+        let runningApps = regularRunningApplicationsByPid()
+        let point = CGPoint(x: x, y: y)
+
+        guard let windowList = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return nil
+        }
+
+        for window in windowList {
+            guard
+                let pid = window[kCGWindowOwnerPID as String] as? Int32,
+                let app = runningApps[pid],
+                let bounds = windowBounds(window),
+                bounds.contains(point),
+                let payload = appPayload(app)
+            else {
+                continue
+            }
+
+            return payload
+        }
+
+        return nil
     }
 
     static func openApplication(bundleId: String) async throws {
@@ -104,9 +165,9 @@ enum AppService {
     }
 
     static func findWindowDisplays(bundleIds: [String]) -> [String: [Int]] {
-        let runningApps = NSWorkspace.shared.runningApplications.reduce(into: [pid_t: String]()) { partial, app in
-            if let bundleId = app.bundleIdentifier {
-                partial[app.processIdentifier] = bundleId
+        let runningApps = regularRunningApplicationsByPid().reduce(into: [pid_t: String]()) { partial, item in
+            if let bundleId = item.value.bundleIdentifier {
+                partial[item.key] = bundleId
             }
         }
 
@@ -121,16 +182,11 @@ enum AppService {
                 let pid = window[kCGWindowOwnerPID as String] as? Int32,
                 let bundleId = runningApps[pid],
                 bundleIds.contains(bundleId),
-                let bounds = window[kCGWindowBounds as String] as? [String: Any],
-                let x = bounds["X"] as? Double,
-                let y = bounds["Y"] as? Double,
-                let width = bounds["Width"] as? Double,
-                let height = bounds["Height"] as? Double
+                let rect = windowBounds(window)
             else {
                 continue
             }
 
-            let rect = CGRect(x: x, y: y, width: width, height: height)
             for display in DisplayService.listDisplays() {
                 guard
                     let displayId = display["displayId"] as? Int,
@@ -158,6 +214,8 @@ enum AppService {
 enum AppService {
     static func listInstalledApps() -> [[String: Any]] { [] }
     static func listRunningApps() -> [[String: Any]] { [] }
+    static func getFrontmostApp() -> [String: Any]? { nil }
+    static func appUnderPoint(x: Double, y: Double) -> [String: Any]? { nil }
     static func openApplication(bundleId: String) async throws {}
     static func hideApplications(bundleIds: [String]) -> [String] { [] }
     static func unhideApplications(bundleIds: [String]) {}

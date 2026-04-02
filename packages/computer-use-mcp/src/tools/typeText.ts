@@ -3,6 +3,7 @@ import { ClipboardGuardError, MissingOsPermissionsError } from '../errors/errorT
 import { readClipboard, writeClipboard } from './clipboard.js'
 import type { ActionExecutionContext } from './actionScope.js'
 import { withActionScope } from './actionScope.js'
+import { ensureFrontmostAppAllowed } from './frontmostGate.js'
 
 export interface TypeArgs {
   text: string
@@ -18,6 +19,8 @@ export async function executeTypeText(
   if (!tccState.accessibility) {
     throw new MissingOsPermissionsError('Accessibility permission is required before type can run.')
   }
+
+  await ensureFrontmostAppAllowed(ctx, 'type')
 
   if (args.viaClipboard ?? true) {
     if (!ctx.session.grantFlags.clipboardWrite) {

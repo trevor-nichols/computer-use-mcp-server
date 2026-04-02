@@ -62,6 +62,30 @@ export const zoomSchema = {
   required: ['x', 'y', 'width', 'height'],
 }
 
+export const captureOutputSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    captureId: { type: 'string' },
+    imagePath: { type: 'string' },
+    mimeType: { type: 'string' },
+    width: { type: 'number' },
+    height: { type: 'number' },
+    displayId: { type: 'number' },
+    originX: { type: 'number' },
+    originY: { type: 'number' },
+    logicalWidth: { type: 'number' },
+    logicalHeight: { type: 'number' },
+    scaleFactor: { type: 'number' },
+    excludedBundleIds: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+  },
+  required: ['ok', 'captureId', 'imagePath', 'mimeType', 'width', 'height', 'displayId', 'originX', 'originY', 'excludedBundleIds'],
+}
+
 export const pointSchema = {
   type: 'object',
   additionalProperties: false,

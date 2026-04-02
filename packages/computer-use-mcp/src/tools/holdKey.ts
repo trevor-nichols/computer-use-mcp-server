@@ -2,6 +2,7 @@ import type { ToolExecutionContext } from '../mcp/callRouter.js'
 import { MissingOsPermissionsError, PermissionDeniedError } from '../errors/errorTypes.js'
 import type { ActionExecutionContext } from './actionScope.js'
 import { withActionScope } from './actionScope.js'
+import { ensureFrontmostAppAllowed } from './frontmostGate.js'
 
 export interface HoldKeyArgs {
   keys: string[]
@@ -29,6 +30,8 @@ export async function executeHoldKey(
   if (keysRequireSystemCombos(args.keys) && !ctx.session.grantFlags.systemKeyCombos) {
     throw new PermissionDeniedError('System key combinations are not granted for this session.')
   }
+
+  await ensureFrontmostAppAllowed(ctx, 'hold_key')
 
   if (keysContainEscape(args.keys)) {
     await ctx.runtime.nativeHost.hotkeys.markExpectedEscape(ctx.session.sessionId, 1_000)

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { JsonRpcRequest, JsonRpcResponse } from './jsonRpc.js'
+import type { HostIdentity } from '../runtime/hostIdentity.js'
 
 export type ApprovalMode = 'local-ui' | 'host-callback' | 'hybrid'
 
@@ -14,6 +15,7 @@ export interface ConnectionMetadata {
   connectionId: string
   clientId?: string
   clientName?: string
+  hostIdentity?: HostIdentity
   approvalMode: ApprovalMode
   hostApprovalCapabilities: HostApprovalCapabilities
   transportName: string
@@ -79,6 +81,9 @@ export abstract class BaseClientConnection implements ClientConnection {
     }
     if (update.clientName !== undefined) {
       this.metadata.clientName = update.clientName
+    }
+    if (update.hostIdentity !== undefined) {
+      this.metadata.hostIdentity = update.hostIdentity
     }
     if (update.approvalMode) {
       this.metadata.approvalMode = update.approvalMode

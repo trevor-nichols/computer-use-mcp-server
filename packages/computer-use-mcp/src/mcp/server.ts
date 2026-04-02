@@ -4,10 +4,12 @@ import type { DesktopLockManager } from '../session/lock.js'
 import type { SessionStore } from '../session/sessionStore.js'
 import type { NativeHostAdapter } from '../native/bridgeTypes.js'
 import type { Logger } from '../observability/logger.js'
+import type { CaptureAssetStore } from '../assets/captureAssetStore.js'
 import { failure, success, type JsonRpcRequest, type JsonRpcResponse } from './jsonRpc.js'
 import { createToolDefinitions } from './toolRegistry.js'
 import type { ToolExtra } from './sessionIdentity.js'
 import type { ApprovalMode, ClientConnection, HostApprovalCapabilities } from './transport.js'
+import { parseHostIdentityFromInitialize } from '../runtime/hostIdentity.js'
 
 export interface ToolDefinition {
   name: string
@@ -25,6 +27,7 @@ export interface ServerRuntime {
   lockManager: DesktopLockManager
   approvalCoordinator: ApprovalCoordinator
   nativeHost: NativeHostAdapter
+  captureAssetStore: CaptureAssetStore
   logger: Logger
 }
 
@@ -44,6 +47,7 @@ export class ComputerUseMcpServer {
           connectionId: connection.connectionId,
           clientId: connection.metadata.clientId,
           clientName: connection.metadata.clientName,
+          hostIdentity: connection.metadata.hostIdentity,
           approvalMode: connection.metadata.approvalMode,
           hostApprovalCapabilities: connection.metadata.hostApprovalCapabilities,
         }
@@ -128,6 +132,7 @@ export class ComputerUseMcpServer {
     const callbackCaps = asObject(capabilitiesExperimental.computerUseApprovalCallbacks ?? experimental.computerUseApprovalCallbacks)
     const requestedMode = (experimental.computerUseApprovalMode ?? capabilitiesExperimental.computerUseApprovalMode) as ApprovalMode | undefined
     const requestedSessionId = typeof experimental.sessionId === 'string' ? experimental.sessionId : undefined
+    const hostIdentity = parseHostIdentityFromInitialize(experimental, capabilitiesExperimental)
 
     const hostApprovalCapabilities: HostApprovalCapabilities = {
       appApproval: Boolean(callbackCaps.appApproval),
@@ -138,6 +143,7 @@ export class ComputerUseMcpServer {
       hostSessionId: requestedSessionId,
       clientId: typeof experimental.clientId === 'string' ? experimental.clientId : connection.metadata.clientId,
       clientName: typeof clientInfo.name === 'string' ? clientInfo.name : connection.metadata.clientName,
+      hostIdentity,
       approvalMode: requestedMode ?? (hostApprovalCapabilities.appApproval || hostApprovalCapabilities.tccPromptRelay ? 'hybrid' : this.runtime.config.approvalDefaultMode),
       hostApprovalCapabilities,
     })

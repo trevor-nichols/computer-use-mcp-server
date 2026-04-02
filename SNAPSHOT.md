@@ -1,10 +1,9 @@
 <project_structure>
 ├── docs
-│   ├── claude-code-reference-notes.md
+│   ├── capture-asset-reference-execution-plan.md
 │   ├── macos-computer-use-implementation-plan.md
 │   ├── macos-computer-use-reimplementation-spec.md
-│   ├── macos-computer-use-starter-code-canvas.md
-│   └── target.md
+│   └── macos-computer-use-starter-code-canvas.md
 ├── packages
 │   ├── approval-ui-macos
 │   │   ├── .build
@@ -19,6 +18,8 @@
 │   │   │   │   ├── approvalProvider.ts
 │   │   │   │   ├── hostCallbackProvider.ts
 │   │   │   │   └── localUiProvider.ts
+│   │   │   ├── assets
+│   │   │   │   └── captureAssetStore.ts
 │   │   │   ├── errors
 │   │   │   │   ├── errorMapper.ts
 │   │   │   │   └── errorTypes.ts
@@ -41,6 +42,8 @@
 │   │   │   ├── permissions
 │   │   │   │   ├── appAllowlist.ts
 │   │   │   │   └── tcc.ts
+│   │   │   ├── runtime
+│   │   │   │   └── hostIdentity.ts
 │   │   │   ├── session
 │   │   │   │   ├── cleanupRegistry.ts
 │   │   │   │   ├── lock.ts
@@ -50,6 +53,7 @@
 │   │   │   │   ├── actionScope.ts
 │   │   │   │   ├── applications.ts
 │   │   │   │   ├── batch.ts
+│   │   │   │   ├── captureResult.ts
 │   │   │   │   ├── captureScope.ts
 │   │   │   │   ├── captureWithFallback.ts
 │   │   │   │   ├── click.ts
@@ -57,6 +61,7 @@
 │   │   │   │   ├── cursorPosition.ts
 │   │   │   │   ├── displayTargeting.ts
 │   │   │   │   ├── drag.ts
+│   │   │   │   ├── frontmostGate.ts
 │   │   │   │   ├── holdKey.ts
 │   │   │   │   ├── key.ts
 │   │   │   │   ├── mouseMove.ts
@@ -77,19 +82,23 @@
 │   │   │   ├── actionScope.test.ts
 │   │   │   ├── approvalCoordinator.test.ts
 │   │   │   ├── batch.test.ts
+│   │   │   ├── captureAssetStore.test.ts
 │   │   │   ├── captureScope.test.ts
 │   │   │   ├── captureWithFallback.test.ts
 │   │   │   ├── coordinates.test.ts
 │   │   │   ├── displayTargeting.test.ts
 │   │   │   ├── errorMapper.test.ts
 │   │   │   ├── escapeHotkey.test.ts
+│   │   │   ├── hostIdentity.test.ts
 │   │   │   ├── lock.test.ts
 │   │   │   ├── screenshotAutoTarget.test.ts
 │   │   │   ├── screenshotSizing.test.ts
 │   │   │   ├── selectDisplay.test.ts
 │   │   │   ├── sessionStore.test.ts
 │   │   │   ├── stdio.e2e.test.ts
-│   │   │   └── streamableHttpTransport.test.ts
+│   │   │   ├── streamableHttpTransport.test.ts
+│   │   │   ├── targetAppSafety.test.ts
+│   │   │   └── zoomTool.test.ts
 │   │   └── package.json
 │   ├── host-sdk
 │   │   └── src
@@ -100,21 +109,26 @@
 │   │   ├── src
 │   │   │   └── lib.rs
 │   │   └── Cargo.toml
-│   └── native-swift
-│       ├── .build
-│       ├── Sources
-│       │   └── ComputerUseBridge
-│       │       ├── AppService.swift
-│       │       ├── BridgeMain.swift
-│       │       ├── ClipboardService.swift
-│       │       ├── DisplayService.swift
-│       │       ├── HotkeyService.swift
-│       │       ├── InputService.swift
-│       │       ├── Models.swift
-│       │       ├── ScreenshotService.swift
-│       │       ├── SyntheticInputMarker.swift
-│       │       └── TccService.swift
-│       └── Package.swift
+│   ├── native-swift
+│   │   ├── .build
+│   │   ├── Sources
+│   │   │   └── ComputerUseBridge
+│   │   │       ├── AppService.swift
+│   │   │       ├── BridgeMain.swift
+│   │   │       ├── ClipboardService.swift
+│   │   │       ├── DisplayService.swift
+│   │   │       ├── HotkeyService.swift
+│   │   │       ├── InputKey.swift
+│   │   │       ├── InputService.swift
+│   │   │       ├── Models.swift
+│   │   │       ├── ScreenshotService.swift
+│   │   │       ├── SyntheticInputMarker.swift
+│   │   │       └── TccService.swift
+│   │   ├── Tests
+│   │   │   └── ComputerUseBridgeTests
+│   │   │       └── InputKeyResolverTests.swift
+│   │   └── Package.swift
+│   └── SNAPSHOT.md
 ├── package.json
 ├── tsconfig.base.json
 └── VALIDATION.md

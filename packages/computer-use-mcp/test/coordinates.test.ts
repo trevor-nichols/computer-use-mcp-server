@@ -36,10 +36,26 @@ function createZoomRegressionRuntime() {
   const mouseDownCalls: Array<{ button: string; cursor: { x: number; y: number } }> = []
   const mouseUpCalls: Array<{ button: string; cursor: { x: number; y: number } }> = []
   let cursor = { x: 0, y: 0 }
+  let captureSequence = 0
 
   const runtime = {
     config,
     logger,
+    captureAssetStore: {
+      async createAsset(sessionId: string, _capture: unknown, screenshotDims: any) {
+        captureSequence += 1
+        const captureId = `capture-${captureSequence}`
+        return {
+          captureId,
+          sessionId,
+          imagePath: `/tmp/${captureId}.png`,
+          mimeType: 'image/png',
+          createdAt: new Date().toISOString(),
+          sizeBytes: 3,
+          ...screenshotDims,
+        }
+      },
+    },
     lockManager: {
       async acquire() {
         return async () => {}
@@ -136,7 +152,8 @@ test('zoom stores cropped logical geometry so a later zoom maps through the curr
 
   assert.deepEqual((firstZoom as any).structuredContent, {
     ok: true,
-    image: 'abc',
+    captureId: 'capture-2',
+    imagePath: '/tmp/capture-2.png',
     mimeType: 'image/png',
     width: 200,
     height: 100,
