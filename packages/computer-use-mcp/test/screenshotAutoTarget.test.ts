@@ -101,6 +101,7 @@ test('screenshot stores the allowed-app cache key after a successful auto-target
   const result = await screenshotTool({ runtime, session } as any, {})
 
   assert.equal((result as any).structuredContent.displayId, 2)
+  assert.equal('image' in (result as any).structuredContent, false)
   assert.deepEqual(captureCalls, [2])
   assert.equal(session.selectedDisplayId, 2)
   assert.equal(session.displayResolvedForAppsKey, 'com.apple.TextEdit')
@@ -121,6 +122,7 @@ test('screenshot clears a stale allowed-app cache key when auto-targeting does n
   const result = await screenshotTool({ runtime, session } as any, {})
 
   assert.equal((result as any).structuredContent.displayId, 1)
+  assert.equal('image' in (result as any).structuredContent, false)
   assert.deepEqual(captureCalls, [1])
   assert.equal(session.selectedDisplayId, 1)
   assert.equal(session.displayResolvedForAppsKey, undefined)

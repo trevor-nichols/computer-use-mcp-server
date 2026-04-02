@@ -554,7 +554,6 @@ export const screenshotTool = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      image: { type: 'string' },
       mimeType: { type: 'string' },
       width: { type: 'integer' },
       height: { type: 'integer' },
@@ -565,7 +564,7 @@ export const screenshotTool = {
       logicalHeight: { type: 'number' },
       scaleFactor: { type: 'number' }
     },
-    required: ['image', 'mimeType', 'width', 'height', 'displayId', 'originX', 'originY']
+    required: ['mimeType', 'width', 'height', 'displayId', 'originX', 'originY']
   },
   annotations: {
     readOnlyHint: true,
@@ -1373,4 +1372,3 @@ Create a third canvas document containing:
 - the first end-to-end test harness
 
 That document should be implementation-ready, not architectural.
-

@@ -1226,7 +1226,6 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
     ],
     structuredContent: {
       ok: true,
-      image: capture.dataBase64,
       mimeType: capture.mimeType,
       width: capture.width,
       height: capture.height,
@@ -1755,4 +1754,3 @@ This starter intentionally mirrors the most useful structural lesson from Claude
 - the native boundary is explicit and swappable
 
 That keeps the first implementation usable from any MCP client while leaving room for the later daemon, host callback, and native-app flows.
-

@@ -56,7 +56,6 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
         ],
         structuredContent: {
           ok: true,
-          image: capture.dataBase64,
           mimeType: capture.mimeType,
           ...screenshotDims,
           excludedBundleIds: prepared.excludedBundleIds,

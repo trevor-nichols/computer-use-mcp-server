@@ -48,7 +48,6 @@ export async function zoomTool(ctx: ToolExecutionContext, args: ZoomArgs) {
         ],
         structuredContent: {
           ok: true,
-          image: capture.dataBase64,
           mimeType: capture.mimeType,
           ...screenshotDims,
           excludedBundleIds: prepared.excludedBundleIds,
