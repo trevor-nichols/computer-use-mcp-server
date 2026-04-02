@@ -1,7 +1,7 @@
 import { createInterface } from 'node:readline'
 import { randomUUID } from 'node:crypto'
 import type { Logger } from '../observability/logger.js'
-import { BaseClientConnection } from './transport.js'
+import { BaseClientConnection, type TransportAdapter } from './transport.js'
 import { failure, isJsonRpcRequest, isJsonRpcResponse, type JsonRpcRequest } from './jsonRpc.js'
 import type { ComputerUseMcpServer } from './server.js'
 
@@ -19,14 +19,45 @@ class StdioConnection extends BaseClientConnection {
   }
 }
 
-export async function connectStdioTransport(server: ComputerUseMcpServer, logger: Logger): Promise<void> {
-  const connection = new StdioConnection()
-  const rl = createInterface({
-    input: process.stdin,
-    crlfDelay: Infinity,
-  })
+class StdioTransport implements TransportAdapter {
+  readonly name = 'stdio'
+  private readonly connection = new StdioConnection()
+  private rl?: ReturnType<typeof createInterface>
+  private closed = false
 
-  rl.on('line', async (line: string) => {
+  constructor(
+    private readonly server: ComputerUseMcpServer,
+    private readonly logger: Logger,
+  ) {}
+
+  async start(): Promise<void> {
+    if (this.rl) return
+
+    this.rl = createInterface({
+      input: process.stdin,
+      crlfDelay: Infinity,
+    })
+
+    this.rl.on('line', (line: string) => {
+      void this.handleLine(line)
+    })
+
+    this.rl.on('close', () => {
+      if (this.closed) return
+      this.closed = true
+      void this.connection.close()
+    })
+  }
+
+  async stop(): Promise<void> {
+    if (this.closed) return
+    this.closed = true
+    this.rl?.close()
+    this.rl = undefined
+    await this.connection.close()
+  }
+
+  private async handleLine(line: string): Promise<void> {
     const trimmed = line.trim()
     if (trimmed.length === 0) return
 
@@ -35,7 +66,7 @@ export async function connectStdioTransport(server: ComputerUseMcpServer, logger
       if (Array.isArray(parsed)) {
         const results = []
         for (const item of parsed) {
-          const result = await handleMessage(item, server, connection)
+          const result = await handleMessage(item, this.server, this.connection)
           if (result) results.push(result)
         }
         if (results.length > 0) {
@@ -44,22 +75,21 @@ export async function connectStdioTransport(server: ComputerUseMcpServer, logger
         return
       }
 
-      const response = await handleMessage(parsed, server, connection)
+      const response = await handleMessage(parsed, this.server, this.connection)
       if (response) {
         process.stdout.write(`${JSON.stringify(response)}\n`)
       }
     } catch (error) {
-      logger.error('stdio transport failed to process line', error)
+      this.logger.error('stdio transport failed to process line', error)
       process.stdout.write(`${JSON.stringify(failure(null, -32700, 'Parse error'))}\n`)
     }
-  })
-
-  const close = async () => {
-    await connection.close()
-    rl.close()
   }
-  process.once('SIGINT', () => void close())
-  process.once('SIGTERM', () => void close())
+}
+
+export async function connectStdioTransport(server: ComputerUseMcpServer, logger: Logger): Promise<TransportAdapter> {
+  const transport = new StdioTransport(server, logger)
+  await transport.start()
+  return transport
 }
 
 async function handleMessage(parsed: unknown, server: ComputerUseMcpServer, connection: StdioConnection) {

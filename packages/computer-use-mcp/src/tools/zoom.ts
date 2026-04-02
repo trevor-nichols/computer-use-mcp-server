@@ -4,6 +4,7 @@ import { createScreenshotDims, mapScreenshotRectToDesktop } from '../transforms/
 import { withActionScope } from './actionScope.js'
 import { createCaptureActionScopeOptions } from './captureScope.js'
 import { captureWithFallback } from './captureWithFallback.js'
+import { createCaptureToolResult } from './captureResult.js'
 
 export interface ZoomArgs {
   x: number
@@ -41,18 +42,13 @@ export async function zoomTool(ctx: ToolExecutionContext, args: ZoomArgs) {
       ctx.session.selectedDisplayId = capture.display.displayId
       ctx.session.displayResolvedForAppsKey = prepared.displayResolvedForAppsKey
 
-      return {
-        content: [
-          { type: 'image', data: capture.dataBase64, mimeType: capture.mimeType },
-          { type: 'text', text: 'Captured zoom region.' },
-        ],
-        structuredContent: {
-          ok: true,
-          mimeType: capture.mimeType,
-          ...screenshotDims,
-          excludedBundleIds: prepared.excludedBundleIds,
-        },
-      }
+      return createCaptureToolResult(
+        ctx,
+        capture,
+        screenshotDims,
+        prepared.excludedBundleIds,
+        'Captured zoom region.',
+      )
     },
   )
 }

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import type { RuntimeConfig } from '../config.js'
 import type { Logger } from '../observability/logger.js'
 import type { SessionStore } from '../session/sessionStore.js'
+import type { CaptureAssetStore } from '../assets/captureAssetStore.js'
 import { BaseClientConnection, type TransportAdapter } from './transport.js'
 import { failure, isJsonRpcRequest, isJsonRpcResponse, type JsonRpcRequest } from './jsonRpc.js'
 import type { ComputerUseMcpServer } from './server.js'
@@ -70,6 +71,7 @@ export class StreamableHttpTransport implements TransportAdapter {
     private readonly mcpServer: ComputerUseMcpServer,
     private readonly runtimeConfig: RuntimeConfig,
     private readonly sessionStore: SessionStore,
+    private readonly captureAssetStore: CaptureAssetStore,
     private readonly logger: Logger,
   ) {}
 
@@ -105,6 +107,12 @@ export class StreamableHttpTransport implements TransportAdapter {
           void connection.close()
           this.connections.delete(sessionId)
         }
+        void this.captureAssetStore.deleteSessionAssets(sessionId).catch(error => {
+          this.logger.warn('failed to delete capture assets for stale session', {
+            sessionId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        })
       }
     }, 60_000)
 
@@ -255,6 +263,7 @@ export class StreamableHttpTransport implements TransportAdapter {
     await connection.close()
     this.connections.delete(sessionId)
     this.sessionStore.delete(sessionId)
+    await this.captureAssetStore.deleteSessionAssets(sessionId)
     res.statusCode = 204
     res.end()
   }

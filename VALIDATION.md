@@ -12,13 +12,14 @@
 - `swift build --package-path packages/approval-ui-macos -c release`
 
 ### Test results
-- `npm test`: 57 / 57 tests passed
+- `npm test`: 60 / 60 tests passed
 - `swift test --package-path packages/native-swift`: 7 / 7 tests passed
 - includes a stdio end-to-end test against the built server in fake mode
 - includes Streamable HTTP transport coverage, including client-supplied session hint handling
 - includes approval coordinator coverage for both local and host-callback approval paths
 - includes shared-scope coverage for `computer_batch`
 - includes screenshot fallback and capture-scope coverage
+- includes capture file storage and cleanup coverage for `imagePath`-based screenshot delivery
 - includes action-scope filtering coverage for target-display app exclusion
 - includes native key normalization coverage for function keys, navigation aliases, punctuation aliases, numpad keys, and modifier aliases
 

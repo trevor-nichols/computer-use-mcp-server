@@ -1,10 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import os from 'node:os'
+import path from 'node:path'
+import fs from 'node:fs/promises'
 import { loadConfig } from '../src/config.js'
 import { createNativeHost } from '../src/native/swiftBridge.js'
 import { createLogger } from '../src/observability/logger.js'
 import { createSessionContext } from '../src/session/sessionContext.js'
 import { screenshotTool } from '../src/tools/screenshot.js'
+import { CaptureAssetStore } from '../src/assets/captureAssetStore.js'
 
 const builtInDisplay = {
   displayId: 1,
@@ -33,6 +37,7 @@ function createRuntimeForScreenshotTests() {
   const config = loadConfig()
   const logger = createLogger()
   const nativeHost = createNativeHost(config, logger)
+  const captureAssetStore = new CaptureAssetStore(path.join(os.tmpdir(), `capture-assets-screenshot-${Date.now()}`), logger)
 
   const displays = [builtInDisplay, externalDisplay]
   const captureCalls: number[] = []
@@ -41,6 +46,7 @@ function createRuntimeForScreenshotTests() {
   const runtime = {
     config,
     logger,
+    captureAssetStore,
     lockManager: {
       async acquire() {
         return async () => {}
@@ -80,6 +86,13 @@ function createRuntimeForScreenshotTests() {
   return {
     runtime,
     captureCalls,
+    async initialize() {
+      await captureAssetStore.initialize()
+    },
+    async cleanup() {
+      await captureAssetStore.cleanupAll()
+      await fs.rm(captureAssetStore.rootDir, { recursive: true, force: true })
+    },
     setWindowDisplays(windowDisplays: Record<string, number[]>) {
       nextWindowDisplays = windowDisplays
     },
@@ -87,7 +100,8 @@ function createRuntimeForScreenshotTests() {
 }
 
 test('screenshot stores the allowed-app cache key after a successful auto-target resolution', async () => {
-  const { runtime, captureCalls, setWindowDisplays } = createRuntimeForScreenshotTests()
+  const { runtime, captureCalls, setWindowDisplays, initialize, cleanup } = createRuntimeForScreenshotTests()
+  await initialize()
   const session = createSessionContext({
     sessionId: 'screenshot-auto-target-session',
     connectionId: 'screenshot-auto-target-connection',
@@ -98,17 +112,26 @@ test('screenshot stores the allowed-app cache key after a successful auto-target
     'com.apple.TextEdit': [2],
   })
 
-  const result = await screenshotTool({ runtime, session } as any, {})
+  try {
+    const result = await screenshotTool({ runtime, session } as any, {})
 
-  assert.equal((result as any).structuredContent.displayId, 2)
-  assert.equal('image' in (result as any).structuredContent, false)
-  assert.deepEqual(captureCalls, [2])
-  assert.equal(session.selectedDisplayId, 2)
-  assert.equal(session.displayResolvedForAppsKey, 'com.apple.TextEdit')
+    assert.equal((result as any).structuredContent.displayId, 2)
+    assert.equal('image' in (result as any).structuredContent, false)
+    assert.equal(typeof (result as any).structuredContent.captureId, 'string')
+    assert.equal(typeof (result as any).structuredContent.imagePath, 'string')
+    assert.equal((result as any).content.some((item: any) => item.type === 'image'), false)
+    assert.equal((await fs.stat((result as any).structuredContent.imagePath)).isFile(), true)
+    assert.deepEqual(captureCalls, [2])
+    assert.equal(session.selectedDisplayId, 2)
+    assert.equal(session.displayResolvedForAppsKey, 'com.apple.TextEdit')
+  } finally {
+    await cleanup()
+  }
 })
 
 test('screenshot clears a stale allowed-app cache key when auto-targeting does not resolve a display', async () => {
-  const { runtime, captureCalls, setWindowDisplays } = createRuntimeForScreenshotTests()
+  const { runtime, captureCalls, setWindowDisplays, initialize, cleanup } = createRuntimeForScreenshotTests()
+  await initialize()
   const session = createSessionContext({
     sessionId: 'screenshot-auto-target-clear-session',
     connectionId: 'screenshot-auto-target-clear-connection',
@@ -119,11 +142,18 @@ test('screenshot clears a stale allowed-app cache key when auto-targeting does n
   session.allowedApps = []
   setWindowDisplays({})
 
-  const result = await screenshotTool({ runtime, session } as any, {})
+  try {
+    const result = await screenshotTool({ runtime, session } as any, {})
 
-  assert.equal((result as any).structuredContent.displayId, 1)
-  assert.equal('image' in (result as any).structuredContent, false)
-  assert.deepEqual(captureCalls, [1])
-  assert.equal(session.selectedDisplayId, 1)
-  assert.equal(session.displayResolvedForAppsKey, undefined)
+    assert.equal((result as any).structuredContent.displayId, 1)
+    assert.equal('image' in (result as any).structuredContent, false)
+    assert.equal(typeof (result as any).structuredContent.captureId, 'string')
+    assert.equal(typeof (result as any).structuredContent.imagePath, 'string')
+    assert.equal((await fs.stat((result as any).structuredContent.imagePath)).isFile(), true)
+    assert.deepEqual(captureCalls, [1])
+    assert.equal(session.selectedDisplayId, 1)
+    assert.equal(session.displayResolvedForAppsKey, undefined)
+  } finally {
+    await cleanup()
+  }
 })

@@ -2,6 +2,8 @@
 
 Standalone local `computer-use` MCP server for macOS.
 
+The current capture flow is optimized for Codex-style agents that can call an image-viewer tool on a local file path.
+
 This repository implements:
 
 - standalone MCP server
@@ -11,6 +13,22 @@ This repository implements:
 - permission and app approval coordination
 - macOS native helper seam for screenshots, TCC, input, apps, and clipboard
 - fake mode for development and testing on non-macOS hosts
+
+## Capture contract
+
+`screenshot` and `zoom` save the captured image to a session-scoped file and return:
+
+- `structuredContent.imagePath`
+- `structuredContent.captureId`
+- the screenshot geometry metadata used for later coordinate transforms
+
+The intended consumer flow is:
+
+1. call `screenshot` or `zoom`
+2. read `structuredContent.imagePath`
+3. call `view_image(imagePath)`
+
+The server does not expose capture delivery through MCP `resources/read`, and the capture tools do not emit inline base64 image payloads.
 
 ## What is included
 
@@ -120,6 +138,7 @@ Optional environment variables:
 
 - `COMPUTER_USE_FAKE=1`
 - `COMPUTER_USE_LOCK_PATH=/custom/path/desktop.lock`
+- `COMPUTER_USE_CAPTURE_ASSET_ROOT=/custom/path/captures`
 - `COMPUTER_USE_SWIFT_BRIDGE_PATH=/absolute/path/to/ComputerUseBridge`
 - `COMPUTER_USE_APPROVAL_UI_PATH=/absolute/path/to/ApprovalUIBridge`
 

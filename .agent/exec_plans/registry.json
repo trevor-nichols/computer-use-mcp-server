@@ -125,6 +125,37 @@
         "docs"
       ],
       "updated": "2026-04-01"
+    },
+    {
+      "breaking": true,
+      "created": "2026-04-02",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260402-001",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/capture-asset-reference-execution-plan.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": true,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/02/EP-20260402-001_capture-assets/EP-20260402-001_capture-assets.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "capture",
+        "codex",
+        "images"
+      ],
+      "title": "Session-scoped capture files and Codex image-path delivery",
+      "touches": [
+        "api",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-02"
     }
   ],
   "schema_version": 1

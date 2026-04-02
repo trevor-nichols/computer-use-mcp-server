@@ -1,10 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { loadConfig } from '../src/config.js'
 import { createNativeHost } from '../src/native/swiftBridge.js'
 import { createLogger } from '../src/observability/logger.js'
 import { createSessionContext } from '../src/session/sessionContext.js'
 import { zoomTool } from '../src/tools/zoom.js'
+import { CaptureAssetStore } from '../src/assets/captureAssetStore.js'
 
 const display = {
   displayId: 1,
@@ -17,11 +21,13 @@ const display = {
   isPrimary: true,
 }
 
-test('zoom keeps the image in content but omits raw image bytes from structuredContent', async () => {
+test('zoom returns a saved image path instead of inline image bytes', async () => {
   process.env.COMPUTER_USE_FAKE = '1'
   const config = loadConfig()
   const logger = createLogger()
   const nativeHost = createNativeHost(config, logger)
+  const captureAssetStore = new CaptureAssetStore(path.join(os.tmpdir(), `capture-assets-zoom-${Date.now()}`), logger)
+  await captureAssetStore.initialize()
   const captureCalls: Array<{
     displayId?: number
     region?: { x: number; y: number; width: number; height: number }
@@ -32,6 +38,7 @@ test('zoom keeps the image in content but omits raw image bytes from structuredC
   const runtime = {
     config,
     logger,
+    captureAssetStore,
     lockManager: {
       async acquire() {
         return async () => {}
@@ -78,22 +85,29 @@ test('zoom keeps the image in content but omits raw image bytes from structuredC
     scaleFactor: display.scaleFactor,
   }
 
-  const result = await zoomTool({ runtime, session } as any, {
-    x: 50,
-    y: 25,
-    width: 20,
-    height: 10,
-  })
+  try {
+    const result = await zoomTool({ runtime, session } as any, {
+      x: 50,
+      y: 25,
+      width: 20,
+      height: 10,
+    })
 
-  assert.deepEqual(captureCalls, [{
-    displayId: display.displayId,
-    region: { x: 110, y: 70, width: 40, height: 20 },
-    format: config.screenshotDefaultFormat,
-    jpegQuality: config.screenshotJpegQuality,
-    excludeBundleIds: [],
-  }])
-  assert.equal((result as any).content[0].type, 'image')
-  assert.equal('image' in (result as any).structuredContent, false)
-  assert.equal((result as any).structuredContent.originX, 110)
-  assert.equal((result as any).structuredContent.originY, 70)
+    assert.deepEqual(captureCalls, [{
+      displayId: display.displayId,
+      region: { x: 110, y: 70, width: 40, height: 20 },
+      format: config.screenshotDefaultFormat,
+      jpegQuality: config.screenshotJpegQuality,
+      excludeBundleIds: [],
+    }])
+    assert.equal((result as any).content.every((item: any) => item.type === 'text'), true)
+    assert.equal('image' in (result as any).structuredContent, false)
+    assert.equal(typeof (result as any).structuredContent.captureId, 'string')
+    assert.equal(typeof (result as any).structuredContent.imagePath, 'string')
+    assert.equal((await fs.stat((result as any).structuredContent.imagePath)).isFile(), true)
+    assert.equal((result as any).structuredContent.originX, 110)
+    assert.equal((result as any).structuredContent.originY, 70)
+  } finally {
+    await captureAssetStore.cleanupAll()
+  }
 })

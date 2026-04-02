@@ -1,5 +1,6 @@
 <project_structure>
 ├── docs
+│   ├── capture-asset-reference-execution-plan.md
 │   ├── macos-computer-use-implementation-plan.md
 │   ├── macos-computer-use-reimplementation-spec.md
 │   └── macos-computer-use-starter-code-canvas.md
@@ -17,6 +18,8 @@
 │   │   │   │   ├── approvalProvider.ts
 │   │   │   │   ├── hostCallbackProvider.ts
 │   │   │   │   └── localUiProvider.ts
+│   │   │   ├── assets
+│   │   │   │   └── captureAssetStore.ts
 │   │   │   ├── errors
 │   │   │   │   ├── errorMapper.ts
 │   │   │   │   └── errorTypes.ts
@@ -50,6 +53,7 @@
 │   │   │   │   ├── actionScope.ts
 │   │   │   │   ├── applications.ts
 │   │   │   │   ├── batch.ts
+│   │   │   │   ├── captureResult.ts
 │   │   │   │   ├── captureScope.ts
 │   │   │   │   ├── captureWithFallback.ts
 │   │   │   │   ├── click.ts
@@ -78,6 +82,7 @@
 │   │   │   ├── actionScope.test.ts
 │   │   │   ├── approvalCoordinator.test.ts
 │   │   │   ├── batch.test.ts
+│   │   │   ├── captureAssetStore.test.ts
 │   │   │   ├── captureScope.test.ts
 │   │   │   ├── captureWithFallback.test.ts
 │   │   │   ├── coordinates.test.ts
@@ -92,7 +97,8 @@
 │   │   │   ├── sessionStore.test.ts
 │   │   │   ├── stdio.e2e.test.ts
 │   │   │   ├── streamableHttpTransport.test.ts
-│   │   │   └── targetAppSafety.test.ts
+│   │   │   ├── targetAppSafety.test.ts
+│   │   │   └── zoomTool.test.ts
 │   │   └── package.json
 │   ├── host-sdk
 │   │   └── src

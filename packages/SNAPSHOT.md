@@ -11,6 +11,8 @@
 │   │   │   ├── approvalProvider.ts  # Interfaces for TCC and app access approval providers
 │   │   │   ├── hostCallbackProvider.ts  # Provider delegating approvals to the connected MCP client/host
 │   │   │   └── localUiProvider.ts  # Provider using the local macOS UI bridge for approvals
+│   │   ├── assets  # Session-scoped capture file lifecycle
+│   │   │   └── captureAssetStore.ts  # Persists screenshot files and cleans them up by session
 │   │   ├── config.ts  # Configuration loading and environment variable parsing
 │   │   ├── errors  # Error handling and mapping
 │   │   │   ├── errorMapper.ts  # Maps internal errors to MCP tool error responses
@@ -46,6 +48,7 @@
 │   │   │   ├── actionScope.ts  # Manages execution scopes, locks, and app hiding for tools
 │   │   │   ├── applications.ts  # Tools for opening and listing allowed applications
 │   │   │   ├── batch.ts  # Tool for executing a sequence of actions atomically
+│   │   │   ├── captureResult.ts  # Normalizes screenshot and zoom output into the `imagePath` contract
 │   │   │   ├── captureScope.ts  # Determines scope options for screenshot captures
 │   │   │   ├── captureWithFallback.ts  # Screenshot capture logic with fallback to temporary app hiding
 │   │   │   ├── click.ts  # Tools for left, right, middle, and double mouse clicks
@@ -71,6 +74,7 @@
 │   │   ├── actionScope.test.ts  # Tests for action execution scopes and app hiding
 │   │   ├── approvalCoordinator.test.ts  # Tests for the approval coordination logic
 │   │   ├── batch.test.ts  # Tests for the batched tool execution
+│   │   ├── captureAssetStore.test.ts  # Tests for capture file persistence and cleanup
 │   │   ├── captureScope.test.ts  # Tests for screenshot scope configuration
 │   │   ├── captureWithFallback.test.ts  # Tests for screenshot app hiding fallback logic
 │   │   ├── coordinates.test.ts  # Tests for coordinate mapping math
@@ -85,7 +89,8 @@
 │   │   ├── sessionStore.test.ts  # Tests for session storage and lifecycle
 │   │   ├── stdio.e2e.test.ts  # End-to-end tests for the stdio transport and tools
 │   │   ├── streamableHttpTransport.test.ts  # Tests for the HTTP/SSE transport
-│   │   └── targetAppSafety.test.ts
+│   │   ├── targetAppSafety.test.ts
+│   │   └── zoomTool.test.ts  # Tests the `imagePath`-based zoom output contract
 │   └── tsconfig.json  # TypeScript configuration for the MCP server
 ├── host-sdk  # SDK for host applications to interact with the MCP server
 │   └── src  # Source code for the host SDK

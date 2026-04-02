@@ -1,16 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
+import os from 'node:os'
+import fs from 'node:fs/promises'
 import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
 
 test('stdio server exposes the computer-use tool surface and supports the fake screenshot loop', async () => {
   const entry = path.resolve(process.cwd(), 'dist/computer-use-mcp/src/main.js')
+  const captureAssetRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'computer-use-capture-assets-'))
   const child = spawn(process.execPath, [entry], {
     cwd: process.cwd(),
     env: {
       ...process.env,
       COMPUTER_USE_FAKE: '1',
+      COMPUTER_USE_CAPTURE_ASSET_ROOT: captureAssetRoot,
     },
     stdio: ['pipe', 'pipe', 'pipe'],
   })
@@ -118,6 +122,9 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
   }) + '\n')
   const screenshot = await readResponse()
   assert.equal(screenshot.result.structuredContent.ok, true)
+  assert.equal(typeof screenshot.result.structuredContent.captureId, 'string')
+  assert.equal(typeof screenshot.result.structuredContent.imagePath, 'string')
+  assert.equal((await fs.stat(screenshot.result.structuredContent.imagePath)).isFile(), true)
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
@@ -157,4 +164,5 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
   assert.equal(autoDisplay.result.structuredContent.mode, 'auto')
 
   child.kill()
+  await fs.rm(captureAssetRoot, { recursive: true, force: true })
 })

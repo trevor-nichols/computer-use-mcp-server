@@ -5,6 +5,7 @@ import { resolveScreenshotTargetSize } from '../transforms/screenshotSizing.js'
 import { withActionScope } from './actionScope.js'
 import { createCaptureActionScopeOptions } from './captureScope.js'
 import { captureWithFallback } from './captureWithFallback.js'
+import { createCaptureToolResult } from './captureResult.js'
 
 export interface ScreenshotArgs {
   displayId?: number
@@ -42,25 +43,13 @@ export async function screenshotTool(ctx: ToolExecutionContext, args: Screenshot
       ctx.session.selectedDisplayId = capture.display.displayId
       ctx.session.displayResolvedForAppsKey = prepared.displayResolvedForAppsKey
 
-      return {
-        content: [
-          {
-            type: 'image',
-            data: capture.dataBase64,
-            mimeType: capture.mimeType,
-          },
-          {
-            type: 'text',
-            text: `Captured display ${capture.display.displayId}.`,
-          },
-        ],
-        structuredContent: {
-          ok: true,
-          mimeType: capture.mimeType,
-          ...screenshotDims,
-          excludedBundleIds: prepared.excludedBundleIds,
-        },
-      }
+      return createCaptureToolResult(
+        ctx,
+        capture,
+        screenshotDims,
+        prepared.excludedBundleIds,
+        `Captured display ${capture.display.displayId}.`,
+      )
     },
   )
 }

@@ -4,6 +4,7 @@ import type { DesktopLockManager } from '../session/lock.js'
 import type { SessionStore } from '../session/sessionStore.js'
 import type { NativeHostAdapter } from '../native/bridgeTypes.js'
 import type { Logger } from '../observability/logger.js'
+import type { CaptureAssetStore } from '../assets/captureAssetStore.js'
 import { failure, success, type JsonRpcRequest, type JsonRpcResponse } from './jsonRpc.js'
 import { createToolDefinitions } from './toolRegistry.js'
 import type { ToolExtra } from './sessionIdentity.js'
@@ -26,6 +27,7 @@ export interface ServerRuntime {
   lockManager: DesktopLockManager
   approvalCoordinator: ApprovalCoordinator
   nativeHost: NativeHostAdapter
+  captureAssetStore: CaptureAssetStore
   logger: Logger
 }
 
