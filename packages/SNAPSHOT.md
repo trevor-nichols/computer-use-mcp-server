@@ -98,15 +98,19 @@
 │       └── lib.rs  # Placeholder library implementation
 └── native-swift  # Native macOS Swift bridge for OS integrations
     ├── Package.swift  # Swift package definition for ComputerUseBridge
-    └── Sources  # Source code for the Swift bridge
-        └── ComputerUseBridge  # Main module for the Swift bridge
-            ├── AppService.swift  # Service for listing, opening, and hiding macOS applications
-            ├── BridgeMain.swift  # Entry point and JSON-RPC router for the Swift bridge
-            ├── ClipboardService.swift  # Service for reading and writing the macOS clipboard
-            ├── DisplayService.swift  # Service for querying connected displays and their properties
-            ├── HotkeyService.swift  # Service for monitoring global escape key aborts
-            ├── InputService.swift  # Service for injecting synthetic mouse and keyboard events
-            ├── Models.swift  # JSON parsing, error modeling, and utility functions
-            ├── ScreenshotService.swift  # Service for capturing screenshots using ScreenCaptureKit
-            ├── SyntheticInputMarker.swift  # Utility to mark and filter synthetically injected input events
-            └── TccService.swift  # Service for checking macOS TCC permissions (Accessibility/Screen Recording)
+    ├── Sources  # Source code for the Swift bridge
+    │   └── ComputerUseBridge  # Main module for the Swift bridge
+    │       ├── AppService.swift  # Service for listing, opening, and hiding macOS applications
+    │       ├── BridgeMain.swift  # Entry point and JSON-RPC router for the Swift bridge
+    │       ├── ClipboardService.swift  # Service for reading and writing the macOS clipboard
+    │       ├── DisplayService.swift  # Service for querying connected displays and their properties
+    │       ├── HotkeyService.swift  # Service for monitoring global escape key aborts
+    │       ├── InputKey.swift  # Shared key normalization, alias resolution, and CGKeyCode mapping
+    │       ├── InputService.swift  # Service for injecting synthetic mouse and keyboard events
+    │       ├── Models.swift  # JSON parsing, error modeling, and utility functions
+    │       ├── ScreenshotService.swift  # Service for capturing screenshots using ScreenCaptureKit
+    │       ├── SyntheticInputMarker.swift  # Utility to mark and filter synthetically injected input events
+    │       └── TccService.swift  # Service for checking macOS TCC permissions (Accessibility/Screen Recording)
+    └── Tests  # Swift package tests for the native bridge
+        └── ComputerUseBridgeTests
+            └── InputKeyResolverTests.swift  # Covers native key aliases, mappings, and fail-closed resolution

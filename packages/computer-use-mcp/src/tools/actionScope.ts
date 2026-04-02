@@ -168,6 +168,23 @@ export function sequenceContainsEscape(sequence: string): boolean {
 }
 
 export function sequenceRequiresSystemKeyCombos(sequence: string): boolean {
-  const lowered = sequence.toLowerCase()
-  return ['command', 'cmd', 'option', 'alt', 'control', 'ctrl', 'fn', 'tab'].some(token => lowered.includes(token))
+  const tokens = sequence
+    .split('+')
+    .map(part => part.trim().toLowerCase())
+    .filter(Boolean)
+
+  return tokens.some(token => [
+    'command',
+    'cmd',
+    'meta',
+    'super',
+    'windows',
+    'option',
+    'alt',
+    'control',
+    'ctrl',
+    'fn',
+    'function',
+    'tab',
+  ].includes(token))
 }

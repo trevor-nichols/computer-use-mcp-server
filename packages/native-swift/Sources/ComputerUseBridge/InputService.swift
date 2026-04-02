@@ -5,6 +5,16 @@ import AppKit
 import CoreGraphics
 
 enum InputService {
+    private static var activeModifierCounts: [InputModifierKey: Int] = [:]
+
+    private static var activeModifierFlags: CGEventFlags {
+        activeModifierCounts.reduce(into: CGEventFlags()) { result, entry in
+            if entry.value > 0 {
+                result.insert(entry.key.flag)
+            }
+        }
+    }
+
     static func getCursorPosition() -> [String: Any] {
         let point = CGEvent(source: nil)?.location ?? .zero
         return [
@@ -50,36 +60,33 @@ enum InputService {
     }
 
     static func keySequence(_ sequence: String) {
-        let parts = sequence
-            .split(separator: "+")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-
-        if parts.isEmpty { return }
-
-        let modifiers = parts.dropLast().compactMap { modifierFlag(String($0)) }
-        let mainKeyName = String(parts.last!)
-        guard let keyCode = keyCodeForKey(mainKeyName) else { return }
-
-        for modifier in modifiers {
-            postModifier(flag: modifier, down: true)
+        guard let resolvedKeys = InputKeyResolver.resolveChord(sequence),
+              let finalKey = resolvedKeys.last else {
+            return
         }
 
-        postKey(keyCode: keyCode, down: true, flags: modifiers.reduce([], { $0.union($1) }))
-        postKey(keyCode: keyCode, down: false, flags: modifiers.reduce([], { $0.union($1) }))
+        let leadingModifiers = Array(resolvedKeys.dropLast())
 
-        for modifier in modifiers.reversed() {
-            postModifier(flag: modifier, down: false)
+        for modifier in leadingModifiers {
+            postResolvedKey(modifier, down: true)
+        }
+
+        postResolvedKey(finalKey, down: true)
+        postResolvedKey(finalKey, down: false)
+
+        for modifier in leadingModifiers.reversed() {
+            postResolvedKey(modifier, down: false)
         }
     }
 
     static func keyDown(_ key: String) {
-        guard let keyCode = keyCodeForKey(key.lowercased()) else { return }
-        postKey(keyCode: keyCode, down: true, flags: [])
+        guard let resolvedKey = InputKeyResolver.resolveKey(key) else { return }
+        postResolvedKey(resolvedKey, down: true)
     }
 
     static func keyUp(_ key: String) {
-        guard let keyCode = keyCodeForKey(key.lowercased()) else { return }
-        postKey(keyCode: keyCode, down: false, flags: [])
+        guard let resolvedKey = InputKeyResolver.resolveKey(key) else { return }
+        postResolvedKey(resolvedKey, down: false)
     }
 
     static func typeText(_ text: String) {
@@ -95,6 +102,15 @@ enum InputService {
         }
     }
 
+    private static func postResolvedKey(_ key: ResolvedInputKey, down: Bool) {
+        switch key {
+        case .keyCode(let keyCode):
+            postKey(keyCode: keyCode, down: down, flags: activeModifierFlags)
+        case .modifier(let modifier):
+            postModifier(modifier, down: down)
+        }
+    }
+
     private static func postMouseEvent(button: String, type: CGEventType, point: CGPoint, clickState: Int64) {
         guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: mouseButton(button)) else {
             return
@@ -103,34 +119,31 @@ enum InputService {
         event.post(tap: .cghidEventTap)
     }
 
-    private static func postKey(keyCode: CGKeyCode, down: Bool, flags: CGEventFlags) {
-        guard let event = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: down) else { return }
+    @discardableResult
+    private static func postKey(keyCode: CGKeyCode, down: Bool, flags: CGEventFlags) -> Bool {
+        guard let event = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: down) else { return false }
         event.flags = flags
         SyntheticInputMarker.mark(event)
         event.post(tap: .cghidEventTap)
+        return true
     }
 
-    private static func postModifier(flag: CGEventFlags, down: Bool) {
-        let key: CGKeyCode
-        switch flag {
-        case .maskCommand: key = 55
-        case .maskShift: key = 56
-        case .maskAlternate: key = 58
-        case .maskControl: key = 59
-        case .maskSecondaryFn: key = 63
-        default: return
+    private static func postModifier(_ modifier: InputModifierKey, down: Bool) {
+        let currentCount = activeModifierCounts[modifier, default: 0]
+        let nextCount = down ? currentCount + 1 : max(0, currentCount - 1)
+        var eventFlags = activeModifierFlags
+
+        if down || nextCount > 0 {
+            eventFlags.insert(modifier.flag)
+        } else {
+            eventFlags.remove(modifier.flag)
         }
-        postKey(keyCode: key, down: down, flags: down ? flag : [])
-    }
 
-    private static func modifierFlag(_ key: String) -> CGEventFlags? {
-        switch key {
-        case "command", "cmd": return .maskCommand
-        case "shift": return .maskShift
-        case "option", "alt": return .maskAlternate
-        case "control", "ctrl": return .maskControl
-        case "fn", "function": return .maskSecondaryFn
-        default: return nil
+        if postKey(keyCode: modifier.keyCode, down: down, flags: eventFlags) {
+            activeModifierCounts[modifier] = nextCount
+            if nextCount == 0 {
+                activeModifierCounts.removeValue(forKey: modifier)
+            }
         }
     }
 
@@ -155,57 +168,6 @@ enum InputService {
         case "right": return .rightMouseUp
         case "middle": return .otherMouseUp
         default: return .leftMouseUp
-        }
-    }
-
-    private static func keyCodeForKey(_ key: String) -> CGKeyCode? {
-        switch key {
-        case "a": return 0
-        case "b": return 11
-        case "c": return 8
-        case "d": return 2
-        case "e": return 14
-        case "f": return 3
-        case "g": return 5
-        case "h": return 4
-        case "i": return 34
-        case "j": return 38
-        case "k": return 40
-        case "l": return 37
-        case "m": return 46
-        case "n": return 45
-        case "o": return 31
-        case "p": return 35
-        case "q": return 12
-        case "r": return 15
-        case "s": return 1
-        case "t": return 17
-        case "u": return 32
-        case "v": return 9
-        case "w": return 13
-        case "x": return 7
-        case "y": return 16
-        case "z": return 6
-        case "0": return 29
-        case "1": return 18
-        case "2": return 19
-        case "3": return 20
-        case "4": return 21
-        case "5": return 23
-        case "6": return 22
-        case "7": return 26
-        case "8": return 28
-        case "9": return 25
-        case "return", "enter": return 36
-        case "tab": return 48
-        case "space": return 49
-        case "escape", "esc": return 53
-        case "delete", "backspace": return 51
-        case "left": return 123
-        case "right": return 124
-        case "down": return 125
-        case "up": return 126
-        default: return nil
         }
     }
 }

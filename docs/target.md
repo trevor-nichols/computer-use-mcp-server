@@ -16,29 +16,33 @@ The current codebase already has:
 
 Those are **not** the remaining gaps.
 
-What still needs attention for standalone production is below.
+There are no open standalone-production gaps remaining in this document today.
 
-## Remaining priorities
+## Keyboard support contract
 
-## 1. Broaden native key support as a focused follow-up
+The final focused input follow-up was broader native key support. That work is now implemented with an explicit, additive token contract.
 
-The Swift input bridge exists and covers the core path, but its key map is still relatively narrow.
+Supported keys:
 
-What to add:
+- existing compatibility keys: `a` through `z`, `0` through `9`, `enter` / `return`, `tab`, `space`, `escape` / `esc`, `delete` / `backspace`, `left`, `right`, `up`, `down`
+- function keys: `f1` through `f20`
+- navigation keys: `home`, `end`, `pageup`, `pagedown`
+- additive navigation aliases: `page_up`, `page_down`, `left_arrow`, `right_arrow`, `up_arrow`, `down_arrow`
+- edit key: `forward_delete`
+- numpad keys: `numpad0` through `numpad9`, `numpad_add`, `numpad_subtract`, `numpad_multiply`, `numpad_divide`, `numpad_decimal`
+- modifiers that work both in `key` sequences and standalone `keyDown` / `keyUp` / `hold_key`: `command` / `cmd`, `shift`, `option` / `alt`, `control` / `ctrl`, `fn` / `function`
+- additive command aliases: `meta`, `super`, `windows`
+- punctuation shortcut keys: `minus`, `equal`, `left_bracket`, `right_bracket`, `backslash`, `semicolon`, `quote`, `comma`, `period`, `slash`, `grave`
+- raw punctuation aliases for those keys: `-`, `=`, `[`, `]`, `\\`, `;`, `'`, `,`, `.`, `/`, `` ` ``
 
-- function keys
-- page up/down
-- home/end
-- more navigation and symbol keys
-- verify modifier-only key down/up behavior stays explicit and testable
+Compatibility rules:
 
-Where:
+- `delete` remains the existing backward-delete key for compatibility
+- `forward_delete` is additive and explicit
+- unknown key names still fail closed instead of being guessed
+- modifier-only transitions remain explicit and testable rather than being treated as special cases of regular keys
 
-- `packages/native-swift/Sources/ComputerUseBridge/InputService.swift`
-- `packages/computer-use-mcp/src/native/bridgeTypes.ts` if bridge types need extension
-- targeted tests for key behavior
+Deliberately out of scope:
 
-Why:
-
-- this is a real capability gap, but it is secondary to the safety and coordinate issues above
-- the priority is better input coverage, not splitting input into a separate package
+- system and media keys such as brightness, volume, playback transport, Launchpad, Mission Control, Eject, Power, illumination, contrast, and display mirroring
+- second-tier keys such as `caps_lock`, `help`, and sided modifiers like `right_command`

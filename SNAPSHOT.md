@@ -1,5 +1,6 @@
 <project_structure>
 ├── docs
+│   ├── README.md
 │   ├── claude-code-reference-notes.md
 │   ├── macos-computer-use-implementation-plan.md
 │   ├── macos-computer-use-reimplementation-spec.md
@@ -114,11 +115,15 @@
 │   │   │       ├── ClipboardService.swift
 │   │   │       ├── DisplayService.swift
 │   │   │       ├── HotkeyService.swift
+│   │   │       ├── InputKey.swift
 │   │   │       ├── InputService.swift
 │   │   │       ├── Models.swift
 │   │   │       ├── ScreenshotService.swift
 │   │   │       ├── SyntheticInputMarker.swift
 │   │   │       └── TccService.swift
+│   │   ├── Tests
+│   │   │   └── ComputerUseBridgeTests
+│   │   │       └── InputKeyResolverTests.swift
 │   │   └── Package.swift
 │   └── SNAPSHOT.md
 ├── package.json

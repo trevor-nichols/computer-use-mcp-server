@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { executeKey } from '../src/tools/key.js'
 import { executeHoldKey } from '../src/tools/holdKey.js'
+import { PermissionDeniedError } from '../src/errors/errorTypes.js'
 import { createSessionContext } from '../src/session/sessionContext.js'
 
 function createContext() {
@@ -75,4 +76,20 @@ test('executeHoldKey marks expected escape before pressing escape', async () => 
 
   assert.equal((result as any).structuredContent.ok, true)
   assert.deepEqual(markedEscapes, [{ sessionId: 'escape-hotkey-session', windowMs: 1_000 }])
+})
+
+test('executeKey denies command aliases when system key combos are not granted', async () => {
+  const { ctx } = createContext()
+  ctx.session.grantFlags.systemKeyCombos = false
+
+  await assert.rejects(
+    executeKey(
+      ctx,
+      { sequence: 'meta+a' },
+      {
+        async delayWithAbort() {},
+      },
+    ),
+    PermissionDeniedError,
+  )
 })

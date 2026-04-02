@@ -94,6 +94,37 @@
         "docs"
       ],
       "updated": "2026-04-01"
+    },
+    {
+      "breaking": false,
+      "created": "2026-04-01",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260401-004",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/target.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/01/EP-20260401-004_native-key-support/EP-20260401-004_native-key-support.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "keyboard",
+        "native",
+        "input"
+      ],
+      "title": "Broaden native key support and make modifier holds explicit",
+      "touches": [
+        "api",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-01"
     }
   ],
   "schema_version": 1

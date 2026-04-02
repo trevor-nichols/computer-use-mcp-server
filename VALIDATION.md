@@ -7,17 +7,20 @@
 - `npm test`
 
 ### Swift
+- `swift test --package-path packages/native-swift`
 - `swift build --package-path packages/native-swift -c release`
 - `swift build --package-path packages/approval-ui-macos -c release`
 
 ### Test results
-- 18 / 18 tests passed
+- `npm test`: 57 / 57 tests passed
+- `swift test --package-path packages/native-swift`: 7 / 7 tests passed
 - includes a stdio end-to-end test against the built server in fake mode
 - includes Streamable HTTP transport coverage, including client-supplied session hint handling
 - includes approval coordinator coverage for both local and host-callback approval paths
 - includes shared-scope coverage for `computer_batch`
 - includes screenshot fallback and capture-scope coverage
 - includes action-scope filtering coverage for target-display app exclusion
+- includes native key normalization coverage for function keys, navigation aliases, punctuation aliases, numpad keys, and modifier aliases
 
 ## Implemented areas from the remaining spec gap list
 
@@ -95,5 +98,5 @@ That recovery path was validated live and makes `screenshot` and `zoom` complete
 ## Still worth validating manually on a Mac
 
 - physical Escape global abort against real desktop actions
-- broader drag, scroll, key, and hold-key behavior across a wider range of native apps
+- broader drag, scroll, key, and hold-key behavior across a wider range of native apps, including the newly added function, navigation, punctuation, and standalone modifier keys
 - direct ScreenCaptureKit exclusion reliability on other Macs and app/window combinations
