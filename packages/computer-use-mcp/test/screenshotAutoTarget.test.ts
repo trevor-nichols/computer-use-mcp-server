@@ -114,13 +114,15 @@ test('screenshot stores the allowed-app cache key after a successful auto-target
 
   try {
     const result = await screenshotTool({ runtime, session } as any, {})
+    const asset = runtime.captureAssetStore.listSessionAssets(session.sessionId)[0]
 
-    assert.equal((result as any).structuredContent.displayId, 2)
-    assert.equal('image' in (result as any).structuredContent, false)
-    assert.equal(typeof (result as any).structuredContent.captureId, 'string')
-    assert.equal(typeof (result as any).structuredContent.imagePath, 'string')
-    assert.equal((result as any).content.some((item: any) => item.type === 'image'), false)
-    assert.equal((await fs.stat((result as any).structuredContent.imagePath)).isFile(), true)
+    assert.equal((result as any).structuredContent, undefined)
+    assert.equal((result as any).content[0]?.type, 'text')
+    assert.equal((result as any).content[1]?.type, 'image')
+    assert.equal(asset?.displayId, 2)
+    assert.equal(typeof asset?.captureId, 'string')
+    assert.equal(typeof asset?.imagePath, 'string')
+    assert.equal((await fs.stat(asset!.imagePath)).isFile(), true)
     assert.deepEqual(captureCalls, [2])
     assert.equal(session.selectedDisplayId, 2)
     assert.equal(session.displayResolvedForAppsKey, 'com.apple.TextEdit')
@@ -144,12 +146,13 @@ test('screenshot clears a stale allowed-app cache key when auto-targeting does n
 
   try {
     const result = await screenshotTool({ runtime, session } as any, {})
+    const asset = runtime.captureAssetStore.listSessionAssets(session.sessionId)[0]
 
-    assert.equal((result as any).structuredContent.displayId, 1)
-    assert.equal('image' in (result as any).structuredContent, false)
-    assert.equal(typeof (result as any).structuredContent.captureId, 'string')
-    assert.equal(typeof (result as any).structuredContent.imagePath, 'string')
-    assert.equal((await fs.stat((result as any).structuredContent.imagePath)).isFile(), true)
+    assert.equal((result as any).structuredContent, undefined)
+    assert.equal(asset?.displayId, 1)
+    assert.equal(typeof asset?.captureId, 'string')
+    assert.equal(typeof asset?.imagePath, 'string')
+    assert.equal((await fs.stat(asset!.imagePath)).isFile(), true)
     assert.deepEqual(captureCalls, [1])
     assert.equal(session.selectedDisplayId, 1)
     assert.equal(session.displayResolvedForAppsKey, undefined)

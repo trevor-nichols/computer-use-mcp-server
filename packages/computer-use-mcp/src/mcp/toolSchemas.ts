@@ -86,6 +86,15 @@ export const captureOutputSchema = {
   required: ['ok', 'captureId', 'imagePath', 'mimeType', 'width', 'height', 'displayId', 'originX', 'originY', 'excludedBundleIds'],
 }
 
+export const captureMetadataSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    captureId: { type: 'string' },
+  },
+  required: ['captureId'],
+}
+
 export const pointSchema = {
   type: 'object',
   additionalProperties: false,

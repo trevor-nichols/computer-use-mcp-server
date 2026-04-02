@@ -8,20 +8,24 @@ export async function createCaptureToolResult(
   excludedBundleIds: string[],
   text: string,
 ) {
-  const asset = await ctx.runtime.captureAssetStore.createAsset(ctx.session.sessionId, capture, screenshotDims)
+  const asset = await ctx.runtime.captureAssetStore.createAsset(
+    ctx.session.sessionId,
+    capture,
+    screenshotDims,
+    excludedBundleIds,
+  )
 
   return {
-    content: [{
-      type: 'text' as const,
-      text: `${text} Image saved to ${asset.imagePath}. Use your image-viewer tool to inspect it.`,
-    }],
-    structuredContent: {
-      ok: true,
-      captureId: asset.captureId,
-      imagePath: asset.imagePath,
-      mimeType: capture.mimeType,
-      ...screenshotDims,
-      excludedBundleIds,
-    },
+    content: [
+      {
+        type: 'text' as const,
+        text: `${text} captureId=${asset.captureId}. Call capture_metadata with that captureId for geometry or file metadata.`,
+      },
+      {
+        type: 'image' as const,
+        data: capture.dataBase64,
+        mimeType: capture.mimeType,
+      },
+    ],
   }
 }

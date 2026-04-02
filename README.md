@@ -2,7 +2,7 @@
 
 Standalone local `computer-use` MCP server for macOS.
 
-The current capture flow is optimized for Codex-style agents that can call an image-viewer tool on a local file path.
+The current capture flow is optimized for MCP clients that can consume inline image attachments. Saved local image paths remain available through `capture_metadata` when a client wants file-based follow-up such as `view_image(imagePath)`.
 
 This repository implements:
 
@@ -16,19 +16,28 @@ This repository implements:
 
 ## Capture contract
 
-`screenshot` and `zoom` save the captured image to a session-scoped file and return:
+`screenshot` and `zoom` now do two things directly:
 
-- `structuredContent.imagePath`
-- `structuredContent.captureId`
-- the screenshot geometry metadata used for later coordinate transforms
+- attach the captured image inline in the MCP `content` array
+- return a text item containing `captureId=...`
+
+Geometry and saved-file metadata are retrieved separately through `capture_metadata`.
 
 The intended consumer flow is:
 
 1. call `screenshot` or `zoom`
-2. read `structuredContent.imagePath`
-3. call `view_image(imagePath)`
+2. inspect the inline MCP image attachment
+3. if geometry or file metadata is needed, call `capture_metadata(captureId)`
 
-The server does not expose capture delivery through MCP `resources/read`, and the capture tools do not emit inline base64 image payloads.
+For clients that prefer file-based image viewing, the fallback flow is:
+
+1. call `screenshot` or `zoom`
+2. extract the `captureId` from the text item
+3. call `capture_metadata(captureId)`
+4. read `structuredContent.imagePath`
+5. call `view_image(imagePath)` if needed
+
+The server does not expose capture delivery through MCP `resources/read`. Screenshot image data is delivered as an MCP `image` content item, not as plain base64 text in `structuredContent`.
 
 ## What is included
 
@@ -43,6 +52,7 @@ The server does not expose capture delivery through MCP `resources/read`, and th
   - `select_display`
   - `switch_display`
   - `zoom`
+  - `capture_metadata`
   - `cursor_position`
   - `mouse_move`
   - `left_click`

@@ -11,6 +11,7 @@ export interface CaptureAssetRecord extends ScreenshotDims {
   mimeType: CaptureResult['mimeType']
   createdAt: string
   sizeBytes: number
+  excludedBundleIds: string[]
 }
 
 export class CaptureAssetStore {
@@ -30,7 +31,12 @@ export class CaptureAssetStore {
     await fs.mkdir(this.rootDir, { recursive: true })
   }
 
-  async createAsset(sessionId: string, capture: CaptureResult, screenshotDims: ScreenshotDims): Promise<CaptureAssetRecord> {
+  async createAsset(
+    sessionId: string,
+    capture: CaptureResult,
+    screenshotDims: ScreenshotDims,
+    excludedBundleIds: string[],
+  ): Promise<CaptureAssetRecord> {
     const captureId = randomUUID()
     const sessionDir = path.join(this.rootDir, encodeURIComponent(sessionId))
     const extension = capture.mimeType === 'image/png' ? 'png' : 'jpg'
@@ -47,6 +53,7 @@ export class CaptureAssetStore {
       mimeType: capture.mimeType,
       createdAt: new Date().toISOString(),
       sizeBytes: bytes.byteLength,
+      excludedBundleIds: [...excludedBundleIds],
       ...screenshotDims,
     }
 
@@ -65,6 +72,10 @@ export class CaptureAssetStore {
     })
 
     return record
+  }
+
+  getSessionAsset(sessionId: string, captureId: string): CaptureAssetRecord | undefined {
+    return this.sessionIndex.get(sessionId)?.get(captureId)
   }
 
   listSessionAssets(sessionId: string): CaptureAssetRecord[] {

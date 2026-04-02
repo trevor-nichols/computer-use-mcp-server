@@ -39,15 +39,20 @@ test('CaptureAssetStore creates, lists, and deletes session-scoped image files',
       logicalHeight: 40,
       scaleFactor: 2,
     },
+    ['com.apple.TextEdit'],
   )
 
   assert.equal(record.sessionId, 'session-one')
+  assert.deepEqual(record.excludedBundleIds, ['com.apple.TextEdit'])
   assert.equal((await fs.stat(record.imagePath)).isFile(), true)
   assert.equal((await fs.readFile(record.imagePath, 'utf8')), 'hello')
+  assert.equal(store.getSessionAsset('session-one', record.captureId)?.imagePath, record.imagePath)
+  assert.equal(store.getSessionAsset('session-two', record.captureId), undefined)
 
   const listed = store.listSessionAssets('session-one')
   assert.equal(listed.length, 1)
   assert.equal(listed[0]?.imagePath, record.imagePath)
+  assert.deepEqual(listed[0]?.excludedBundleIds, ['com.apple.TextEdit'])
   assert.equal(store.listSessionAssets('session-two').length, 0)
 
   await store.deleteSessionAssets('session-one')

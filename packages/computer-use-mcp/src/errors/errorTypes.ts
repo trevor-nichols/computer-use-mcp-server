@@ -47,6 +47,13 @@ export class ScreenshotCaptureError extends Error {
   }
 }
 
+export class CaptureAssetNotFoundError extends Error {
+  constructor(message = 'Unknown captureId for this session.') {
+    super(message)
+    this.name = 'CaptureAssetNotFoundError'
+  }
+}
+
 export class PermissionDeniedError extends Error {
   constructor(message = 'Permission request was denied.') {
     super(message)

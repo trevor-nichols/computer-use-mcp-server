@@ -5,6 +5,7 @@ import os from 'node:os'
 import fs from 'node:fs/promises'
 import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
+import { extractCaptureId } from './captureResultHelpers.js'
 
 test('stdio server exposes the computer-use tool surface and supports the fake screenshot loop', async () => {
   const entry = path.resolve(process.cwd(), 'dist/computer-use-mcp/src/main.js')
@@ -63,6 +64,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
     'select_display',
     'switch_display',
     'zoom',
+    'capture_metadata',
     'cursor_position',
     'mouse_move',
     'left_click',
@@ -121,14 +123,31 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
     },
   }) + '\n')
   const screenshot = await readResponse()
-  assert.equal(screenshot.result.structuredContent.ok, true)
-  assert.equal(typeof screenshot.result.structuredContent.captureId, 'string')
-  assert.equal(typeof screenshot.result.structuredContent.imagePath, 'string')
-  assert.equal((await fs.stat(screenshot.result.structuredContent.imagePath)).isFile(), true)
+  const captureId = extractCaptureId(screenshot.result)
+  assert.equal(screenshot.result.content[0]?.type, 'text')
+  assert.equal(screenshot.result.content[1]?.type, 'image')
+  assert.equal(typeof screenshot.result.content[1]?.data, 'string')
+  assert.equal(screenshot.result.content[1]?.mimeType, 'image/jpeg')
+  assert.equal(screenshot.result.structuredContent, undefined)
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
     id: 6,
+    method: 'tools/call',
+    params: {
+      name: 'capture_metadata',
+      arguments: { captureId },
+    },
+  }) + '\n')
+  const captureMetadata = await readResponse()
+  assert.equal(captureMetadata.result.structuredContent.ok, true)
+  assert.equal(captureMetadata.result.structuredContent.captureId, captureId)
+  assert.equal(typeof captureMetadata.result.structuredContent.imagePath, 'string')
+  assert.equal((await fs.stat(captureMetadata.result.structuredContent.imagePath)).isFile(), true)
+
+  child.stdin.write(JSON.stringify({
+    jsonrpc: '2.0',
+    id: 7,
     method: 'tools/call',
     params: {
       name: 'left_click',
@@ -140,7 +159,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 7,
+    id: 8,
     method: 'tools/call',
     params: {
       name: 'type',
@@ -152,7 +171,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
 
   child.stdin.write(JSON.stringify({
     jsonrpc: '2.0',
-    id: 8,
+    id: 9,
     method: 'tools/call',
     params: {
       name: 'switch_display',

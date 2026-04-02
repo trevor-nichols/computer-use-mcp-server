@@ -8,9 +8,9 @@ It is still useful for sequencing, rationale, and earlier contract decisions, bu
 
 - `README.md` for the current runtime overview
 - `SNAPSHOT.md` for the current file layout
-- `docs/capture-asset-reference-execution-plan.md` for the current `imagePath` capture contract
+- `docs/capture-asset-reference-execution-plan.md` for the current image-first capture contract
 
-In particular, the current implementation no longer uses the earlier generic capture-delivery ideas that appeared in some planning discussions; `screenshot` and `zoom` now return `structuredContent.imagePath` and are meant to be followed by `view_image(imagePath)`.
+In particular, the current implementation no longer uses the earlier generic capture-delivery ideas that appeared in some planning discussions; `screenshot` and `zoom` now attach inline images and expose geometry plus saved-file metadata through `capture_metadata`.
 
 ## 1) Objective
 

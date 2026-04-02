@@ -21,7 +21,7 @@ const display = {
   isPrimary: true,
 }
 
-test('zoom returns a saved image path instead of inline image bytes', async () => {
+test('zoom attaches an MCP image result and still saves a local image path', async () => {
   process.env.COMPUTER_USE_FAKE = '1'
   const config = loadConfig()
   const logger = createLogger()
@@ -100,13 +100,17 @@ test('zoom returns a saved image path instead of inline image bytes', async () =
       jpegQuality: config.screenshotJpegQuality,
       excludeBundleIds: [],
     }])
-    assert.equal((result as any).content.every((item: any) => item.type === 'text'), true)
-    assert.equal('image' in (result as any).structuredContent, false)
-    assert.equal(typeof (result as any).structuredContent.captureId, 'string')
-    assert.equal(typeof (result as any).structuredContent.imagePath, 'string')
-    assert.equal((await fs.stat((result as any).structuredContent.imagePath)).isFile(), true)
-    assert.equal((result as any).structuredContent.originX, 110)
-    assert.equal((result as any).structuredContent.originY, 70)
+    assert.equal((result as any).content[0]?.type, 'text')
+    assert.equal((result as any).content[1]?.type, 'image')
+    assert.equal((result as any).content[1]?.data, 'abc')
+    assert.equal((result as any).content[1]?.mimeType, 'image/png')
+    assert.equal((result as any).structuredContent, undefined)
+    const asset = captureAssetStore.listSessionAssets(session.sessionId)[0]
+    assert.equal(typeof asset?.captureId, 'string')
+    assert.equal(typeof asset?.imagePath, 'string')
+    assert.equal((await fs.stat(asset!.imagePath)).isFile(), true)
+    assert.equal(asset?.originX, 110)
+    assert.equal(asset?.originY, 70)
   } finally {
     await captureAssetStore.cleanupAll()
   }

@@ -42,7 +42,7 @@ function createZoomRegressionRuntime() {
     config,
     logger,
     captureAssetStore: {
-      async createAsset(sessionId: string, _capture: unknown, screenshotDims: any) {
+      async createAsset(sessionId: string, _capture: unknown, screenshotDims: any, excludedBundleIds: string[]) {
         captureSequence += 1
         const captureId = `capture-${captureSequence}`
         return {
@@ -52,6 +52,7 @@ function createZoomRegressionRuntime() {
           mimeType: 'image/png',
           createdAt: new Date().toISOString(),
           sizeBytes: 3,
+          excludedBundleIds,
           ...screenshotDims,
         }
       },
@@ -150,21 +151,10 @@ test('zoom stores cropped logical geometry so a later zoom maps through the curr
   const firstZoom = await zoomTool({ runtime, session } as any, { x: 50, y: 20, width: 100, height: 40 })
   await zoomTool({ runtime, session } as any, { x: 100, y: 50, width: 50, height: 25 })
 
-  assert.deepEqual((firstZoom as any).structuredContent, {
-    ok: true,
-    captureId: 'capture-2',
-    imagePath: '/tmp/capture-2.png',
-    mimeType: 'image/png',
-    width: 200,
-    height: 100,
-    displayId: 1,
-    originX: 60,
-    originY: 40,
-    logicalWidth: 100,
-    logicalHeight: 40,
-    scaleFactor: 2,
-    excludedBundleIds: [],
-  })
+  assert.equal((firstZoom as any).structuredContent, undefined)
+  assert.equal((firstZoom as any).content[0]?.type, 'text')
+  assert.match((firstZoom as any).content[0]?.text ?? '', /captureId=capture-2/)
+  assert.equal((firstZoom as any).content[1]?.type, 'image')
   assert.deepEqual(captureCalls[1]?.region, { x: 60, y: 40, width: 100, height: 40 })
   assert.deepEqual(captureCalls[2]?.region, { x: 110, y: 60, width: 25, height: 10 })
   assert.deepEqual(session.lastScreenshotDims, {

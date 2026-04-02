@@ -156,6 +156,36 @@
         "docs"
       ],
       "updated": "2026-04-02"
+    },
+    {
+      "breaking": true,
+      "created": "2026-04-02",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260402-002",
+      "kind": "feature",
+      "links": {
+        "docs": "",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/02/EP-20260402-002_screenshot-metadata-split/EP-20260402-002_screenshot-metadata-split.md",
+      "risk": "low",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "mcp",
+        "screenshots",
+        "tool-contracts"
+      ],
+      "title": "Split screenshot image attachments from capture metadata",
+      "touches": [
+        "agents",
+        "tests"
+      ],
+      "updated": "2026-04-02"
     }
   ],
   "schema_version": 1

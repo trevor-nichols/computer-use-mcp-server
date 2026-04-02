@@ -15,6 +15,7 @@ import { HostCallbackApprovalProvider } from '../src/approvals/hostCallbackProvi
 import { ApprovalCoordinator } from '../src/approvals/approvalCoordinator.js'
 import { ComputerUseMcpServer } from '../src/mcp/server.js'
 import { StreamableHttpTransport } from '../src/mcp/streamableHttpTransport.js'
+import { extractCaptureId } from './captureResultHelpers.js'
 
 function requestJson(options: any, body?: unknown): Promise<{ statusCode: number; headers: any; body: any }> {
   return new Promise((resolve, reject) => {
@@ -117,6 +118,7 @@ test('streamable HTTP transport can initialize and list tools', async () => {
     const toolNames = tools.body.result.tools.map((tool: any) => tool.name)
     assert.equal(toolNames.includes('computer_batch'), true)
     assert.equal(toolNames.includes('zoom'), true)
+    assert.equal(toolNames.includes('capture_metadata'), true)
   } finally {
     await transport.stop()
     await captureAssetStore.cleanupAll()
@@ -280,11 +282,67 @@ test('streamable HTTP transport returns capture image paths and cleans them up o
       },
     )
 
-    const imagePath = String(screenshot.body.result.structuredContent.imagePath)
-    assert.equal(typeof screenshot.body.result.structuredContent.captureId, 'string')
+    const captureId = extractCaptureId(screenshot.body.result)
+    assert.equal(screenshot.body.result.content[0]?.type, 'text')
+    assert.equal(screenshot.body.result.content[1]?.type, 'image')
+    assert.equal(typeof screenshot.body.result.content[1]?.data, 'string')
+    assert.equal(screenshot.body.result.content[1]?.mimeType, 'image/jpeg')
+    assert.equal(screenshot.body.result.structuredContent, undefined)
+
+    const captureMetadata = await requestJson(
+      {
+        method: 'POST',
+        host: config.streamableHttpBindHost,
+        port: transport.port,
+        path: '/mcp',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost',
+          'mcp-session-id': sessionOne,
+        },
+      },
+      {
+        jsonrpc: '2.0',
+        id: 3,
+        method: 'tools/call',
+        params: {
+          name: 'capture_metadata',
+          arguments: { captureId },
+        },
+      },
+    )
+    const imagePath = String(captureMetadata.body.result.structuredContent.imagePath)
+    assert.equal(captureMetadata.body.result.structuredContent.captureId, captureId)
     assert.equal((await fs.stat(imagePath)).isFile(), true)
 
     const sessionTwo = await initializeSession()
+    const wrongSessionMetadata = await requestJson(
+      {
+        method: 'POST',
+        host: config.streamableHttpBindHost,
+        port: transport.port,
+        path: '/mcp',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost',
+          'mcp-session-id': sessionTwo,
+        },
+      },
+      {
+        jsonrpc: '2.0',
+        id: 31,
+        method: 'tools/call',
+        params: {
+          name: 'capture_metadata',
+          arguments: { captureId },
+        },
+      },
+    )
+    assert.equal(wrongSessionMetadata.body.result.isError, true)
+    assert.equal(wrongSessionMetadata.body.result.structuredContent.error.name, 'CaptureAssetNotFoundError')
+
     const screenshotTwo = await requestJson(
       {
         method: 'POST',
@@ -309,7 +367,32 @@ test('streamable HTTP transport returns capture image paths and cleans them up o
       },
     )
 
-    const imagePathTwo = String(screenshotTwo.body.result.structuredContent.imagePath)
+    const captureIdTwo = extractCaptureId(screenshotTwo.body.result)
+    assert.equal(screenshotTwo.body.result.content[1]?.type, 'image')
+    const captureMetadataTwo = await requestJson(
+      {
+        method: 'POST',
+        host: config.streamableHttpBindHost,
+        port: transport.port,
+        path: '/mcp',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost',
+          'mcp-session-id': sessionTwo,
+        },
+      },
+      {
+        jsonrpc: '2.0',
+        id: 5,
+        method: 'tools/call',
+        params: {
+          name: 'capture_metadata',
+          arguments: { captureId: captureIdTwo },
+        },
+      },
+    )
+    const imagePathTwo = String(captureMetadataTwo.body.result.structuredContent.imagePath)
     assert.equal((await fs.stat(imagePathTwo)).isFile(), true)
     assert.notEqual(imagePathTwo, imagePath)
 

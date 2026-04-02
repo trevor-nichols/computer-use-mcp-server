@@ -1,6 +1,7 @@
 import { createToolHandler } from './callRouter.js'
 import type { ServerRuntime, ToolDefinition } from './server.js'
 import {
+  captureMetadataSchema,
   computerBatchSchema,
   dragSchema,
   holdKeySchema,
@@ -21,6 +22,7 @@ import { requestAccessTool } from '../tools/requestAccess.js'
 import { selectDisplayTool } from '../tools/selectDisplay.js'
 import { screenshotTool } from '../tools/screenshot.js'
 import { zoomTool } from '../tools/zoom.js'
+import { captureMetadataTool } from '../tools/captureMetadata.js'
 import { cursorPositionTool } from '../tools/cursorPosition.js'
 import { leftClickTool, rightClickTool, middleClickTool, doubleClickTool, tripleClickTool } from '../tools/click.js'
 import { mouseMoveTool } from '../tools/mouseMove.js'
@@ -79,9 +81,8 @@ export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] 
     {
       name: 'screenshot',
       title: 'Screenshot',
-      description: 'Capture a screenshot and return a local image path for use with image-viewer tools.',
+      description: 'Capture a screenshot and attach it to the tool result. Use capture_metadata for geometry or file metadata.',
       inputSchema: screenshotSchema,
-      outputSchema: captureOutputSchema,
       annotations: readonlyAnnotations(),
       handler: createToolHandler(runtime, screenshotTool),
     },
@@ -104,11 +105,19 @@ export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] 
     {
       name: 'zoom',
       title: 'Zoom Screenshot',
-      description: 'Capture a cropped screenshot region and return a local image path for use with image-viewer tools.',
+      description: 'Capture a cropped screenshot region and attach it to the tool result. Use capture_metadata for geometry or file metadata.',
       inputSchema: zoomSchema,
-      outputSchema: captureOutputSchema,
       annotations: readonlyAnnotations(),
       handler: createToolHandler(runtime, zoomTool),
+    },
+    {
+      name: 'capture_metadata',
+      title: 'Capture Metadata',
+      description: 'Return saved-path and geometry metadata for a prior screenshot or zoom by captureId.',
+      inputSchema: captureMetadataSchema,
+      outputSchema: captureOutputSchema,
+      annotations: readonlyAnnotations(),
+      handler: createToolHandler(runtime, captureMetadataTool),
     },
     {
       name: 'cursor_position',
