@@ -12,8 +12,8 @@
 - `swift build --package-path packages/approval-ui-macos -c release`
 
 ### Test results
-- `npm test`: 60 / 60 tests passed
-- `swift test --package-path packages/native-swift`: 7 / 7 tests passed
+- `npm test`: 65 / 65 tests passed
+- `swift test --package-path packages/native-swift`: 9 / 9 tests passed
 - includes a stdio end-to-end test against the built server in fake mode
 - includes Streamable HTTP transport coverage, including client-supplied session hint handling
 - includes approval coordinator coverage for both local and host-callback approval paths
@@ -22,6 +22,7 @@
 - includes capture file storage and cleanup coverage for `imagePath`-based screenshot delivery
 - includes action-scope filtering coverage for target-display app exclusion
 - includes native key normalization coverage for function keys, navigation aliases, punctuation aliases, numpad keys, and modifier aliases
+- includes native installed-app discovery coverage for nested `.app` bundles and duplicate-bundle root precedence
 
 ## Implemented areas from the remaining spec gap list
 
@@ -47,6 +48,7 @@
   - key
   - hold_key
   - read_clipboard / write_clipboard
+  - search_applications
   - list_granted_applications
   - wait
   - computer_batch

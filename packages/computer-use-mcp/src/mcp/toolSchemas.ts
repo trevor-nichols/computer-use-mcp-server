@@ -204,6 +204,43 @@ export const openApplicationSchema = {
   required: ['bundleId'],
 }
 
+export const searchApplicationsSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    query: { type: 'string', minLength: 1 },
+    limit: { type: 'integer', minimum: 1, maximum: 25, default: 8 },
+    source: {
+      type: 'string',
+      enum: ['all', 'running', 'installed'],
+      default: 'all',
+    },
+    includePaths: { type: 'boolean', default: false },
+  },
+  required: ['query'],
+}
+
+export const searchApplicationsOutputSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    query: { type: 'string' },
+    source: {
+      type: 'string',
+      enum: ['all', 'running', 'installed'],
+    },
+    limit: { type: 'integer' },
+    totalMatches: { type: 'integer' },
+    hasMore: { type: 'boolean' },
+    apps: {
+      type: 'array',
+      items: allowedAppItem,
+    },
+  },
+  required: ['ok', 'query', 'source', 'limit', 'totalMatches', 'hasMore', 'apps'],
+}
+
 export const waitSchema = {
   type: 'object',
   additionalProperties: false,

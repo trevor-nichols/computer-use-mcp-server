@@ -9,6 +9,8 @@ import {
   listDisplaysOutputSchema,
   openApplicationSchema,
   pointSchema,
+  searchApplicationsOutputSchema,
+  searchApplicationsSchema,
   requestAccessSchema,
   selectDisplaySchema,
   screenshotSchema,
@@ -34,6 +36,7 @@ import { holdKeyTool } from '../tools/holdKey.js'
 import { typeTextTool } from '../tools/typeText.js'
 import { readClipboardTool, writeClipboardTool } from '../tools/clipboard.js'
 import { openApplicationTool, listGrantedApplicationsTool } from '../tools/applications.js'
+import { searchApplicationsTool } from '../tools/searchApplications.js'
 import { listDisplaysTool } from '../tools/displays.js'
 import { waitTool } from '../tools/wait.js'
 import { computerBatchTool } from '../tools/batch.js'
@@ -233,6 +236,15 @@ export function createToolDefinitions(runtime: ServerRuntime): ToolDefinition[] 
       inputSchema: writeClipboardSchema,
       annotations: mutatingAnnotations(),
       handler: createToolHandler(runtime, writeClipboardTool),
+    },
+    {
+      name: 'search_applications',
+      title: 'Search Applications',
+      description: 'Search installed or running applications and return bounded matches suitable for request_access.',
+      inputSchema: searchApplicationsSchema,
+      outputSchema: searchApplicationsOutputSchema,
+      annotations: readonlyAnnotations(),
+      handler: createToolHandler(runtime, searchApplicationsTool),
     },
     {
       name: 'open_application',

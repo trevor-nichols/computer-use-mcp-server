@@ -781,6 +781,37 @@ export const writeClipboardTool = {
 
 ## 8.7 Application tools
 
+### `search_applications`
+
+```ts
+export const searchApplicationsTool = {
+  name: 'search_applications',
+  title: 'Search Applications',
+  description: 'Search installed or running applications and return bounded matches suitable for request_access.',
+  inputSchema: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      query: { type: 'string', minLength: 1 },
+      limit: { type: 'integer', minimum: 1, maximum: 25, default: 8 },
+      source: {
+        type: 'string',
+        enum: ['all', 'running', 'installed'],
+        default: 'all'
+      },
+      includePaths: { type: 'boolean', default: false }
+    },
+    required: ['query']
+  },
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: false
+  }
+}
+```
+
 ### `open_application`
 
 ```ts
@@ -1288,6 +1319,7 @@ If starting today, implement only this:
 - `cursor_position`
 - `left_click`
 - `type`
+- `search_applications`
 - `open_application`
 
 ### Exit criterion

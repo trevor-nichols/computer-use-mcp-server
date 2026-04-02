@@ -67,6 +67,7 @@ The server does not expose capture delivery through MCP `resources/read`. Screen
   - `type`
   - `read_clipboard`
   - `write_clipboard`
+  - `search_applications`
   - `open_application`
   - `list_granted_applications`
   - `wait`

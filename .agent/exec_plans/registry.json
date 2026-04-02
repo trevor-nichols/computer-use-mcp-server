@@ -186,6 +186,37 @@
         "tests"
       ],
       "updated": "2026-04-02"
+    },
+    {
+      "breaking": false,
+      "created": "2026-04-02",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260402-003",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/macos-computer-use-reimplementation-spec.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/02/EP-20260402-003_search-applications/EP-20260402-003_search-applications.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "tools",
+        "applications",
+        "approval"
+      ],
+      "title": "Add search_applications tool for bounded app discovery",
+      "touches": [
+        "api",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-02"
     }
   ],
   "schema_version": 1

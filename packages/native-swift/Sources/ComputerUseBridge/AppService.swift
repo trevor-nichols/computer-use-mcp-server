@@ -4,6 +4,20 @@ import Foundation
 import AppKit
 import CoreGraphics
 
+struct InstalledAppRecord: Equatable {
+    let bundleId: String
+    let displayName: String
+    let path: String
+
+    var payload: [String: Any] {
+        [
+            "bundleId": bundleId,
+            "displayName": displayName,
+            "path": path
+        ]
+    }
+}
+
 enum AppService {
     private static func appPayload(_ app: NSRunningApplication) -> [String: Any]? {
         guard app.activationPolicy == .regular, let bundleId = app.bundleIdentifier else { return nil }
@@ -37,23 +51,95 @@ enum AppService {
     }
 
     static func listInstalledApps() -> [[String: Any]] {
-        let roots = ["/Applications", "/System/Applications"]
-        var results: [[String: Any]] = []
+        discoverInstalledApps(in: defaultInstalledAppRoots()).map(\.payload)
+    }
+
+    static func defaultInstalledAppRoots(fileManager: FileManager = .default) -> [URL] {
+        let homeApplications = fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications", isDirectory: true)
+        return [
+            homeApplications,
+            URL(fileURLWithPath: "/Applications", isDirectory: true),
+            URL(fileURLWithPath: "/System/Applications", isDirectory: true)
+        ]
+    }
+
+    static func discoverInstalledApps(
+        in roots: [URL],
+        fileManager: FileManager = .default
+    ) -> [InstalledAppRecord] {
+        var recordsByBundleId = [String: InstalledAppRecord]()
+        var seenPaths = Set<String>()
 
         for root in roots {
-            guard let items = try? FileManager.default.contentsOfDirectory(atPath: root) else { continue }
-            for item in items where item.hasSuffix(".app") {
-                let url = URL(fileURLWithPath: root).appendingPathComponent(item)
-                let bundle = Bundle(url: url)
-                results.append([
-                    "bundleId": bundle?.bundleIdentifier ?? item,
-                    "displayName": bundle?.object(forInfoDictionaryKey: "CFBundleName") as? String ?? item.replacingOccurrences(of: ".app", with: ""),
-                    "path": url.path
-                ])
+            var isDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: root.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+                continue
+            }
+
+            guard let enumerator = fileManager.enumerator(
+                at: root,
+                includingPropertiesForKeys: [.isDirectoryKey, .isPackageKey],
+                options: [.skipsHiddenFiles]
+            ) else {
+                continue
+            }
+
+            for case let url as URL in enumerator {
+                if url.pathExtension.caseInsensitiveCompare("app") != .orderedSame {
+                    continue
+                }
+
+                enumerator.skipDescendants()
+
+                let resolvedURL = url.resolvingSymlinksInPath().standardizedFileURL
+                guard seenPaths.insert(resolvedURL.path).inserted else {
+                    continue
+                }
+
+                guard let record = installedAppRecord(at: resolvedURL) else {
+                    continue
+                }
+
+                if recordsByBundleId[record.bundleId] == nil {
+                    recordsByBundleId[record.bundleId] = record
+                }
             }
         }
 
-        return results
+        return recordsByBundleId.values.sorted { lhs, rhs in
+            if lhs.displayName.caseInsensitiveCompare(rhs.displayName) != .orderedSame {
+                return compareCaseInsensitive(lhs.displayName, rhs.displayName)
+            }
+            if lhs.bundleId.caseInsensitiveCompare(rhs.bundleId) != .orderedSame {
+                return compareCaseInsensitive(lhs.bundleId, rhs.bundleId)
+            }
+            return compareCaseInsensitive(lhs.path, rhs.path)
+        }
+    }
+
+    private static func installedAppRecord(at url: URL) -> InstalledAppRecord? {
+        let bundle = Bundle(url: url)
+        let fallbackName = url.deletingPathExtension().lastPathComponent
+        let bundleId = bundle?.bundleIdentifier ?? fallbackName
+        let displayName =
+            (bundle?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (bundle?.object(forInfoDictionaryKey: "CFBundleName") as? String)
+            ?? fallbackName
+
+        return InstalledAppRecord(
+            bundleId: bundleId,
+            displayName: displayName,
+            path: url.path
+        )
+    }
+
+    private static func compareCaseInsensitive(_ lhs: String, _ rhs: String) -> Bool {
+        let lhsLower = lhs.lowercased()
+        let rhsLower = rhs.lowercased()
+        if lhsLower != rhsLower {
+            return lhsLower < rhsLower
+        }
+        return lhs < rhs
     }
 
     static func listRunningApps() -> [[String: Any]] {

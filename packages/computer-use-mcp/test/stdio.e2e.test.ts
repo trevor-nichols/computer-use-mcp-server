@@ -77,6 +77,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
     'type',
     'read_clipboard',
     'write_clipboard',
+    'search_applications',
     'open_application',
     'list_granted_applications',
     'wait',

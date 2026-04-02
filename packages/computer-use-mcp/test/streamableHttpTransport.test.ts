@@ -119,6 +119,7 @@ test('streamable HTTP transport can initialize and list tools', async () => {
     assert.equal(toolNames.includes('computer_batch'), true)
     assert.equal(toolNames.includes('zoom'), true)
     assert.equal(toolNames.includes('capture_metadata'), true)
+    assert.equal(toolNames.includes('search_applications'), true)
   } finally {
     await transport.stop()
     await captureAssetStore.cleanupAll()

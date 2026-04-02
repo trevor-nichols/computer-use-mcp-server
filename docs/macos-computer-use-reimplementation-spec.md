@@ -474,6 +474,31 @@ Requirements:
 Purpose:
 - Clipboard access, gated by session flags.
 
+#### `search_applications`
+
+Purpose:
+- Return a bounded list of installed or running applications that match a query and can be passed directly into `request_access`.
+
+Input:
+- `query`
+- `limit?`
+- `source?`
+  - `all`
+  - `running`
+  - `installed`
+- `includePaths?`
+
+Output:
+- bounded `apps[]` results in the `AllowedApp` shape
+- total match count
+- whether more matches were truncated from the response
+
+Requirements:
+- keep output deterministic and bounded for agent consumption
+- include only fields compatible with `request_access` on each app item
+- prefer exact and prefix matches over loose substring matches
+- allow installed-app paths to be omitted unless explicitly requested
+
 #### `open_application`
 
 Purpose:
