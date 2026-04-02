@@ -41,6 +41,8 @@
 │   │   │   ├── permissions
 │   │   │   │   ├── appAllowlist.ts
 │   │   │   │   └── tcc.ts
+│   │   │   ├── runtime
+│   │   │   │   └── hostIdentity.ts
 │   │   │   ├── session
 │   │   │   │   ├── cleanupRegistry.ts
 │   │   │   │   ├── lock.ts
@@ -57,6 +59,7 @@
 │   │   │   │   ├── cursorPosition.ts
 │   │   │   │   ├── displayTargeting.ts
 │   │   │   │   ├── drag.ts
+│   │   │   │   ├── frontmostGate.ts
 │   │   │   │   ├── holdKey.ts
 │   │   │   │   ├── key.ts
 │   │   │   │   ├── mouseMove.ts
@@ -83,13 +86,15 @@
 │   │   │   ├── displayTargeting.test.ts
 │   │   │   ├── errorMapper.test.ts
 │   │   │   ├── escapeHotkey.test.ts
+│   │   │   ├── hostIdentity.test.ts
 │   │   │   ├── lock.test.ts
 │   │   │   ├── screenshotAutoTarget.test.ts
 │   │   │   ├── screenshotSizing.test.ts
 │   │   │   ├── selectDisplay.test.ts
 │   │   │   ├── sessionStore.test.ts
 │   │   │   ├── stdio.e2e.test.ts
-│   │   │   └── streamableHttpTransport.test.ts
+│   │   │   ├── streamableHttpTransport.test.ts
+│   │   │   └── targetAppSafety.test.ts
 │   │   └── package.json
 │   ├── host-sdk
 │   │   └── src
@@ -100,21 +105,22 @@
 │   │   ├── src
 │   │   │   └── lib.rs
 │   │   └── Cargo.toml
-│   └── native-swift
-│       ├── .build
-│       ├── Sources
-│       │   └── ComputerUseBridge
-│       │       ├── AppService.swift
-│       │       ├── BridgeMain.swift
-│       │       ├── ClipboardService.swift
-│       │       ├── DisplayService.swift
-│       │       ├── HotkeyService.swift
-│       │       ├── InputService.swift
-│       │       ├── Models.swift
-│       │       ├── ScreenshotService.swift
-│       │       ├── SyntheticInputMarker.swift
-│       │       └── TccService.swift
-│       └── Package.swift
+│   ├── native-swift
+│   │   ├── .build
+│   │   ├── Sources
+│   │   │   └── ComputerUseBridge
+│   │   │       ├── AppService.swift
+│   │   │       ├── BridgeMain.swift
+│   │   │       ├── ClipboardService.swift
+│   │   │       ├── DisplayService.swift
+│   │   │       ├── HotkeyService.swift
+│   │   │       ├── InputService.swift
+│   │   │       ├── Models.swift
+│   │   │       ├── ScreenshotService.swift
+│   │   │       ├── SyntheticInputMarker.swift
+│   │   │       └── TccService.swift
+│   │   └── Package.swift
+│   └── SNAPSHOT.md
 ├── package.json
 ├── tsconfig.base.json
 └── VALIDATION.md
