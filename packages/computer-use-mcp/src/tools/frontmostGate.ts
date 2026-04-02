@@ -11,6 +11,10 @@ function allowedBundleIds(ctx: ToolExecutionContext): string[] {
   return ctx.session.allowedApps.map(app => app.bundleId)
 }
 
+function isResolvedHostApp(ctx: ToolExecutionContext, resolvedApp: RunningAppInfo): boolean {
+  return resolvedApp.bundleId === ctx.session.hostIdentity?.bundleId
+}
+
 function assertAllowedResolvedApp(
   ctx: ToolExecutionContext,
   resolvedApp: RunningAppInfo | null,
@@ -31,6 +35,21 @@ function assertAllowedResolvedApp(
       allowedBundleIds: allowedBundleIds(ctx),
     })
     throw new TargetApplicationResolutionError(`Could not resolve the ${target} before ${action}.`)
+  }
+
+  if (isResolvedHostApp(ctx, resolvedApp) && !isAppAllowed(ctx.session, resolvedApp.bundleId)) {
+    ctx.runtime.logger.warn('blocked input because host application became the target', {
+      sessionId: ctx.session.sessionId,
+      action,
+      target,
+      point,
+      resolvedApp,
+      hostIdentity: ctx.session.hostIdentity,
+      allowedBundleIds: allowedBundleIds(ctx),
+    })
+    throw new TargetApplicationDeniedError(
+      `Host app ${resolvedApp.bundleId} is the ${target}. Focus a granted application before ${action}.`,
+    )
   }
 
   if (!isAppAllowed(ctx.session, resolvedApp.bundleId)) {

@@ -62,6 +62,38 @@
         "docs"
       ],
       "updated": "2026-04-01"
+    },
+    {
+      "breaking": false,
+      "created": "2026-04-01",
+      "depends_on": [],
+      "domain": "backend",
+      "id": "EP-20260401-003",
+      "kind": "feature",
+      "links": {
+        "docs": "docs/target.md",
+        "issue": "",
+        "pr": ""
+      },
+      "migration": false,
+      "owner": "@codex",
+      "path": ".agent/exec_plans/complete/2026/04/01/EP-20260401-003_host-self-awareness/EP-20260401-003_host-self-awareness.md",
+      "risk": "med",
+      "status": "archived",
+      "supersedes": [],
+      "tags": [
+        "host",
+        "safety",
+        "capture"
+      ],
+      "title": "Add host self-awareness to capture and action flows",
+      "touches": [
+        "api",
+        "security",
+        "tests",
+        "docs"
+      ],
+      "updated": "2026-04-01"
     }
   ],
   "schema_version": 1

@@ -12,6 +12,7 @@ test('capture scope uses screenshot exclusion instead of pre-hiding when both ar
     acquireLock: true,
     hideDisallowedApps: false,
     excludeDisallowedApps: true,
+    excludeHostFromScreenshots: true,
     explicitDisplayId: 7,
     autoTargetDisplay: false,
   })
@@ -27,6 +28,7 @@ test('capture scope still hides disallowed apps when screenshot exclusion is dis
     acquireLock: true,
     hideDisallowedApps: true,
     excludeDisallowedApps: false,
+    excludeHostFromScreenshots: true,
     explicitDisplayId: undefined,
     autoTargetDisplay: false,
   })
@@ -42,6 +44,7 @@ test('capture scope can opt screenshot actions into auto-target display resoluti
     acquireLock: true,
     hideDisallowedApps: false,
     excludeDisallowedApps: true,
+    excludeHostFromScreenshots: true,
     explicitDisplayId: undefined,
     autoTargetDisplay: true,
   })

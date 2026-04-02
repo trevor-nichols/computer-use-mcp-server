@@ -8,6 +8,7 @@ export interface ActionScopeOptions {
   registerAbort?: boolean
   hideDisallowedApps?: boolean
   excludeDisallowedApps?: boolean
+  excludeHostFromScreenshots?: boolean
   explicitDisplayId?: number
   autoTargetDisplay?: boolean
 }
@@ -16,7 +17,9 @@ export interface PreparedActionContext {
   targetDisplayId?: number
   displayResolvedForAppsKey?: string
   excludedBundleIds: string[]
+  fallbackHideBundleIds: string[]
   hiddenBundleIds: string[]
+  hostBundleId?: string
 }
 
 export interface ActionExecutionContext {
@@ -74,7 +77,9 @@ export async function prepareForAction(
   const targetDisplayId = displayTarget.targetDisplayId
 
   let excludedBundleIds: string[] = []
+  let fallbackHideBundleIds: string[] = []
   let hiddenBundleIds: string[] = []
+  const hostBundleId = options.excludeHostFromScreenshots ? ctx.session.hostIdentity?.bundleId : undefined
 
   const shouldConsiderDisallowed = (options.excludeDisallowedApps || options.hideDisallowedApps) && ctx.session.allowedApps.length > 0
   if (shouldConsiderDisallowed) {
@@ -83,6 +88,7 @@ export async function prepareForAction(
     const disallowed = runningApps
       .map(app => app.bundleId)
       .filter(bundleId => !allowedBundleIds.has(bundleId))
+      .filter(bundleId => bundleId !== hostBundleId)
       .filter((bundleId, index, array) => array.indexOf(bundleId) === index)
     const windowDisplays =
       disallowed.length > 0 ? await ctx.runtime.nativeHost.apps.findWindowDisplays(disallowed) : {}
@@ -90,6 +96,7 @@ export async function prepareForAction(
 
     if (options.excludeDisallowedApps) {
       excludedBundleIds = visibleDisallowed
+      fallbackHideBundleIds = visibleDisallowed
     }
 
     if (options.hideDisallowedApps && visibleDisallowed.length > 0) {
@@ -103,12 +110,22 @@ export async function prepareForAction(
     }
   }
 
+  if (hostBundleId) {
+    excludedBundleIds = uniqueBundleIds([...excludedBundleIds, hostBundleId])
+  }
+
   return {
     targetDisplayId,
     displayResolvedForAppsKey: displayTarget.displayResolvedForAppsKey,
     excludedBundleIds,
+    fallbackHideBundleIds,
     hiddenBundleIds,
+    hostBundleId,
   }
+}
+
+function uniqueBundleIds(bundleIds: string[]): string[] {
+  return [...new Set(bundleIds.filter(Boolean))]
 }
 
 export function filterDisallowedBundleIdsForTargetDisplay(

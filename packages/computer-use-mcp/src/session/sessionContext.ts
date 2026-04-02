@@ -1,11 +1,14 @@
 import type { AllowedApp, GrantFlags, ScreenshotDims, TccState } from '../native/bridgeTypes.js'
 import type { ApprovalMode, ClientConnection, HostApprovalCapabilities } from '../mcp/transport.js'
+import type { HostIdentity } from '../runtime/hostIdentity.js'
 
 export interface SessionContext {
   sessionId: string
   hostSessionId?: string
   clientId?: string
   clientName?: string
+  hostIdentity?: HostIdentity
+  hostIdentityResolutionAttempted: boolean
   connectionId: string
   startedAt: string
   lastSeenAt: string
@@ -38,6 +41,7 @@ export function createSessionContext(input: {
   approvalMode: ApprovalMode
   clientId?: string
   clientName?: string
+  hostIdentity?: HostIdentity
   hostApprovalCapabilities?: HostApprovalCapabilities
   connection?: ClientConnection
 }): SessionContext {
@@ -47,6 +51,8 @@ export function createSessionContext(input: {
     hostSessionId: input.hostSessionId,
     clientId: input.clientId,
     clientName: input.clientName,
+    hostIdentity: input.hostIdentity,
+    hostIdentityResolutionAttempted: input.hostIdentity !== undefined,
     connectionId: input.connectionId,
     startedAt: now,
     lastSeenAt: now,

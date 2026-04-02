@@ -19,6 +19,7 @@ function createLogger() {
 
 function createContext(options?: {
   allowedApps?: Array<{ bundleId: string; displayName: string }>
+  hostIdentity?: { bundleId: string; displayName?: string; source?: 'initialize-metadata' | 'stdio-parent' }
   frontmostApp?: { bundleId: string; displayName: string; pid: number; isFrontmost: boolean } | null
   pointApp?: { bundleId: string; displayName: string; pid: number; isFrontmost: boolean } | null
   appUnderPoint?: (x: number, y: number) => Promise<{ bundleId: string; displayName: string; pid: number; isFrontmost: boolean } | null>
@@ -33,6 +34,14 @@ function createContext(options?: {
     screenRecording: true,
   }
   session.allowedApps = options?.allowedApps ?? [{ bundleId: 'com.apple.TextEdit', displayName: 'TextEdit' }]
+  if (options?.hostIdentity) {
+    session.hostIdentity = {
+      bundleId: options.hostIdentity.bundleId,
+      displayName: options.hostIdentity.displayName,
+      source: options.hostIdentity.source ?? 'initialize-metadata',
+    }
+    session.hostIdentityResolutionAttempted = true
+  }
 
   const calls = {
     moveMouse: [] as Array<{ x: number; y: number }>,
@@ -280,6 +289,61 @@ test('executeScroll blocks when the app under point is not granted', async () =>
 
   assert.deepEqual(calls.moveMouse, [])
   assert.deepEqual(calls.scroll, [])
+})
+
+test('performClick explains when the host application becomes the app under point', async () => {
+  const { ctx } = createContext({
+    hostIdentity: {
+      bundleId: 'com.apple.Terminal',
+      displayName: 'Terminal',
+    },
+    pointApp: {
+      bundleId: 'com.apple.Terminal',
+      displayName: 'Terminal',
+      pid: 20,
+      isFrontmost: true,
+    },
+  })
+
+  await assert.rejects(
+    performClick(
+      ctx,
+      { x: 10, y: 20 },
+      'left',
+      1,
+      {
+        async delayWithAbort() {},
+        async throwIfAbortRequested() {},
+      },
+    ),
+    (error: unknown) => error instanceof TargetApplicationDeniedError && error.message.includes('Host app com.apple.Terminal'),
+  )
+})
+
+test('executeKey explains when the host application is frontmost', async () => {
+  const { ctx } = createContext({
+    hostIdentity: {
+      bundleId: 'com.apple.Terminal',
+      displayName: 'Terminal',
+    },
+    frontmostApp: {
+      bundleId: 'com.apple.Terminal',
+      displayName: 'Terminal',
+      pid: 20,
+      isFrontmost: true,
+    },
+  })
+
+  await assert.rejects(
+    executeKey(
+      ctx,
+      { sequence: 'a' },
+      {
+        async delayWithAbort() {},
+      },
+    ),
+    (error: unknown) => error instanceof TargetApplicationDeniedError && error.message.includes('Host app com.apple.Terminal'),
+  )
 })
 
 test('target-app gates are skipped when the session has no granted apps', async () => {

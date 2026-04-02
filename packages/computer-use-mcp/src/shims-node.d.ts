@@ -14,6 +14,7 @@ declare module 'node:fs' {
   export const existsSync: any
 }
 declare module 'node:child_process' {
+  export const execFileSync: any
   export const spawn: any
   export type ChildProcessWithoutNullStreams = any
 }

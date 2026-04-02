@@ -12,6 +12,7 @@ export function createCaptureActionScopeOptions(
     acquireLock: hideDisallowedApps || config.excludeDisallowedFromScreenshots,
     hideDisallowedApps,
     excludeDisallowedApps: config.excludeDisallowedFromScreenshots,
+    excludeHostFromScreenshots: true,
     explicitDisplayId,
     autoTargetDisplay: autoTargetDisplay && explicitDisplayId === undefined,
   }

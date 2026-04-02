@@ -4,6 +4,7 @@ import {
   resolveClientId,
   resolveClientName,
   resolveConnectionId,
+  resolveHostIdentity,
   resolveHostSessionId,
   resolveHostApprovalCapabilities,
   resolveSessionId,
@@ -11,6 +12,7 @@ import {
 } from './sessionIdentity.js'
 import type { SessionContext } from '../session/sessionContext.js'
 import type { ServerRuntime } from './server.js'
+import { ensureSessionHostIdentity } from '../runtime/hostIdentity.js'
 
 export interface ToolExecutionContext {
   runtime: ServerRuntime
@@ -31,9 +33,19 @@ export function createToolHandler<TArgs>(runtime: ServerRuntime, handler: ToolHa
       approvalMode: resolveApprovalMode(extra),
       clientId: resolveClientId(extra),
       clientName: resolveClientName(extra),
+      hostIdentity: resolveHostIdentity(extra),
       hostApprovalCapabilities: resolveHostApprovalCapabilities(extra),
       connection: extra?.connection,
     })
+
+    await ensureSessionHostIdentity(
+      {
+        logger: runtime.logger,
+        listRunningApps: () => runtime.nativeHost.apps.listRunningApps(),
+      },
+      session,
+      extra,
+    )
 
     try {
       return await handler({ runtime, session, extra }, args)

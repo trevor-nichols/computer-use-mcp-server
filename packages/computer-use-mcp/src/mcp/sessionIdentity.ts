@@ -1,4 +1,5 @@
 import type { ApprovalMode, ClientConnection, HostApprovalCapabilities } from './transport.js'
+import type { HostIdentity } from '../runtime/hostIdentity.js'
 
 export interface ToolExtra {
   sessionId?: string
@@ -6,6 +7,7 @@ export interface ToolExtra {
   connectionId?: string
   clientId?: string
   clientName?: string
+  hostIdentity?: HostIdentity
   approvalMode?: ApprovalMode
   hostApprovalCapabilities?: HostApprovalCapabilities
   connection?: ClientConnection
@@ -33,6 +35,10 @@ export function resolveClientId(extra?: ToolExtra): string | undefined {
 
 export function resolveClientName(extra?: ToolExtra): string | undefined {
   return extra?.connection?.metadata.clientName ?? extra?.clientName
+}
+
+export function resolveHostIdentity(extra?: ToolExtra): HostIdentity | undefined {
+  return extra?.connection?.metadata.hostIdentity ?? extra?.hostIdentity
 }
 
 export function resolveHostApprovalCapabilities(extra?: ToolExtra): HostApprovalCapabilities | undefined {

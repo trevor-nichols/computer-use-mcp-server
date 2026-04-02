@@ -7,6 +7,10 @@ The current codebase already has:
 - `select_display` and `switch_display`
 - display pinning and app-aware auto-targeting
 - frontmost / under-cursor fail-closed safety gates for granted sessions
+- session-scoped host identity for explicit hosts and stdio parent-app inference
+- host exclusion from screenshot capture where supported
+- host exemption from hide / fallback-hide flows
+- host-aware fail-closed safety messaging when the host becomes the accidental target
 - `CGEventTap`-based Escape abort with a fallback monitor
 - zoom-to-action coordinate persistence with regression coverage for nested zoom, click, and drag flows
 
@@ -16,33 +20,7 @@ What still needs attention for standalone production is below.
 
 ## Remaining priorities
 
-## 1. Add host/self-awareness to capture and hide flows
-
-The server tracks host/client metadata, but it does not yet model a host application identity inside the desktop-safety layer.
-
-What to add:
-
-- a runtime concept of host bundle identity
-- host exemption from hide/unhide flows
-- host exclusion from screenshot capture where supported
-- host-aware activation behavior so the host does not accidentally become the click target
-
-Where:
-
-- a new runtime/helper layer, for example:
-  - `packages/computer-use-mcp/src/runtime/hostIdentity.ts`
-- wire into:
-  - `packages/computer-use-mcp/src/tools/actionScope.ts`
-  - `packages/computer-use-mcp/src/tools/captureScope.ts`
-  - `packages/computer-use-mcp/src/tools/captureWithFallback.ts`
-  - screenshot capture options / native bridge plumbing
-
-Why:
-
-- a standalone server still needs to avoid hiding or photographing its own host unnecessarily
-- without this, terminal-hosted and embedded-host usage can behave unpredictably
-
-## 2. Broaden native key support as a focused follow-up
+## 1. Broaden native key support as a focused follow-up
 
 The Swift input bridge exists and covers the core path, but its key map is still relatively narrow.
 
