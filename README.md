@@ -2,14 +2,14 @@
 
 Standalone local `computer-use` MCP server for macOS.
 
-This repository implements the first real slice of the clean-room design we documented:
+This repository implements:
 
-- standalone MCP server, not embedded in one host
+- standalone MCP server
 - stdio transport first
 - session-owned state
 - desktop lock
 - permission and app approval coordination
-- real macOS native helper seam for screenshots, TCC, input, apps, and clipboard
+- macOS native helper seam for screenshots, TCC, input, apps, and clipboard
 - fake mode for development and testing on non-macOS hosts
 
 ## What is included
@@ -131,21 +131,3 @@ Optional environment variables:
 - `packages/approval-ui-macos/` — local approval helper executable
 - `packages/host-sdk/` — host callback contract stubs
 - `packages/native-input/` — reserved for a future Rust input port
-
-## Status summary
-
-What is production-shaped:
-
-- repo structure
-- stdio and Streamable HTTP transports
-- tool contracts and registry
-- session model
-- lock model
-- native bridge seam
-- real macOS helper commands for the current tool surface
-
-What still needs more work after this pass:
-
-- full approval helper integration by default
-- richer approval UI and app-hinting for `request_access`
-- optional `left_mouse_down` / `left_mouse_up` parity work
