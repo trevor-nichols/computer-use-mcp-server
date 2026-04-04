@@ -1,6 +1,7 @@
 import XCTest
 @testable import ComputerUseBridge
 
+#if os(macOS)
 final class AppServiceTests: XCTestCase {
     func testDiscoverInstalledAppsFindsNestedApplicationBundles() throws {
         let root = try makeTemporaryDirectory()
@@ -17,12 +18,13 @@ final class AppServiceTests: XCTestCase {
         )
 
         let records = AppService.discoverInstalledApps(in: [root])
+        let didFindTerminal = records.contains { record in
+            record.bundleId == "com.apple.Terminal"
+                && record.displayName == "Terminal"
+                && record.path == terminalPath.path
+        }
 
-        XCTAssertTrue(records.contains(where: {
-            $0.bundleId == "com.apple.Terminal"
-                && $0.displayName == "Terminal"
-                && $0.path == terminalPath.path
-        }))
+        XCTAssertTrue(didFindTerminal)
     }
 
     func testDiscoverInstalledAppsPrefersEarlierRootsForDuplicateBundleIds() throws {
@@ -83,3 +85,10 @@ final class AppServiceTests: XCTestCase {
         return url.standardizedFileURL
     }
 }
+#else
+final class AppServiceTests: XCTestCase {
+    func testAppServiceRequiresMacOS() {
+        XCTAssertTrue(true)
+    }
+}
+#endif

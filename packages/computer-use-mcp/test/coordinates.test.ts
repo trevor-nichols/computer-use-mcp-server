@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { loadConfig } from '../src/config.js'
-import { createNativeHost } from '../src/native/swiftBridge.js'
+import { createNativeHost } from '../src/native/nativeHost.js'
 import { createLogger } from '../src/observability/logger.js'
 import { createSessionContext } from '../src/session/sessionContext.js'
 import { leftClickTool } from '../src/tools/click.js'

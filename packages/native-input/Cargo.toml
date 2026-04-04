@@ -1,8 +1,19 @@
 [package]
-name = "computer_use_input_placeholder"
+name = "computer_use_native_input"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "computer_use_input_placeholder"
+name = "computer_use_native_input"
 path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+napi = "3.8.3"
+napi-derive = "3.5.3"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = { version = "0.25.0", features = ["highsierra"] }
+
+[build-dependencies]
+napi-build = "2.3.1"

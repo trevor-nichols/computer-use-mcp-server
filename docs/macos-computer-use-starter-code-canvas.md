@@ -10,6 +10,8 @@ Use it as a scaffold reference only. For the current repository behavior, prefer
 - `SNAPSHOT.md` for the current file layout
 - `docs/capture-asset-reference-execution-plan.md` for the current screenshot and zoom output contract
 
+The live runtime now also supports an optional Rust input backend (`@agenai/native-input`) selected via `COMPUTER_USE_INPUT_BACKEND=rust`; earlier Rust-placeholder notes in this document are historical.
+
 The live server now saves captures to disk, attaches inline MCP images in `screenshot` and `zoom`, and exposes file-path plus geometry lookup through `capture_metadata`.
 
 This is the implementation-ready starter for the first thin slice of the standalone local `computer-use` MCP server.

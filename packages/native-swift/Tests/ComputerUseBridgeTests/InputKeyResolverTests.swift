@@ -1,6 +1,8 @@
 import XCTest
-import Carbon.HIToolbox
 @testable import ComputerUseBridge
+
+#if os(macOS)
+import Carbon.HIToolbox
 
 final class InputKeyResolverTests: XCTestCase {
     func testResolveModifierAliases() {
@@ -81,3 +83,10 @@ final class InputKeyResolverTests: XCTestCase {
         XCTAssertNil(InputKeyResolver.resolveKey(""))
     }
 }
+#else
+final class InputKeyResolverTests: XCTestCase {
+    func testInputKeyResolverRequiresMacOS() {
+        XCTAssertTrue(true)
+    }
+}
+#endif

@@ -20,6 +20,10 @@ import { SwiftBridgeClient } from './helperClient.js'
 const ONE_BY_ONE_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9s3tQ0AAAAAASUVORK5CYII='
 
+export interface SwiftClientLike {
+  send<T>(method: string, params?: Record<string, unknown>): Promise<T>
+}
+
 function fakeDisplay(): DisplayInfo {
   return {
     displayId: 1,
@@ -33,7 +37,7 @@ function fakeDisplay(): DisplayInfo {
   }
 }
 
-function createFakeScreenshotBridge(): ScreenshotBridge {
+export function createFakeScreenshotBridge(): ScreenshotBridge {
   return {
     async listDisplays() {
       return [fakeDisplay()]
@@ -51,7 +55,7 @@ function createFakeScreenshotBridge(): ScreenshotBridge {
   }
 }
 
-function createFakeAppBridge(logger: Logger): AppBridge {
+export function createFakeAppBridge(logger: Logger): AppBridge {
   const fakeActiveApp = {
     bundleId: 'com.apple.TextEdit',
     displayName: 'TextEdit',
@@ -91,7 +95,7 @@ function createFakeAppBridge(logger: Logger): AppBridge {
   }
 }
 
-function createFakeInputBridge(logger: Logger): InputBridge {
+export function createFakeInputBridge(logger: Logger): InputBridge {
   let cursor: CursorPosition = { x: 0, y: 0 }
 
   return {
@@ -129,7 +133,7 @@ function createFakeInputBridge(logger: Logger): InputBridge {
   }
 }
 
-function createFakeClipboardBridge(): ClipboardBridge {
+export function createFakeClipboardBridge(): ClipboardBridge {
   let value = ''
   return {
     async readText() {
@@ -141,7 +145,7 @@ function createFakeClipboardBridge(): ClipboardBridge {
   }
 }
 
-function createFakeTccBridge(): TccBridge {
+export function createFakeTccBridge(): TccBridge {
   let state: TccState = {
     accessibility: true,
     screenRecording: true,
@@ -160,7 +164,7 @@ function createFakeTccBridge(): TccBridge {
   }
 }
 
-function createFakeHotkeyBridge(): HotkeyBridge {
+export function createFakeHotkeyBridge(): HotkeyBridge {
   return {
     async registerEscapeAbort() { return },
     async markExpectedEscape() { return },
@@ -169,14 +173,142 @@ function createFakeHotkeyBridge(): HotkeyBridge {
   }
 }
 
-function createFakeRunLoopPump(): RunLoopPump {
+export function createFakeRunLoopPump(): RunLoopPump {
   return {
     retain() { return },
     release() { return },
   }
 }
 
-export function createNativeHost(config: RuntimeConfig, logger: Logger): NativeHostAdapter {
+export function createSwiftScreenshotBridge(client: SwiftClientLike): ScreenshotBridge {
+  return {
+    async listDisplays() {
+      return client.send<DisplayInfo[]>('listDisplays')
+    },
+    async capture(options: CaptureOptions) {
+      return client.send<CaptureResult>('capture', options as unknown as Record<string, unknown>)
+    },
+  }
+}
+
+export function createSwiftAppBridge(client: SwiftClientLike): AppBridge {
+  return {
+    async listInstalledApps() {
+      return client.send('listInstalledApps')
+    },
+    async listRunningApps() {
+      return client.send('listRunningApps')
+    },
+    async getFrontmostApp() {
+      return client.send('getFrontmostApp')
+    },
+    async appUnderPoint(x: number, y: number) {
+      return client.send('appUnderPoint', { x, y })
+    },
+    async openApplication(bundleId: string) {
+      await client.send('openApplication', { bundleId })
+    },
+    async hideApplications(bundleIds: string[]) {
+      return client.send('hideApplications', { bundleIds })
+    },
+    async unhideApplications(bundleIds: string[]) {
+      await client.send('unhideApplications', { bundleIds })
+    },
+    async findWindowDisplays(bundleIds: string[]) {
+      return client.send('findWindowDisplays', { bundleIds })
+    },
+  }
+}
+
+export function createSwiftInputBridge(client: SwiftClientLike): InputBridge {
+  return {
+    async getCursorPosition() {
+      return client.send('getCursorPosition')
+    },
+    async moveMouse(x: number, y: number) {
+      await client.send('moveMouse', { x, y })
+    },
+    async mouseDown(button) {
+      await client.send('mouseDown', { button })
+    },
+    async mouseUp(button) {
+      await client.send('mouseUp', { button })
+    },
+    async click(button, count) {
+      await client.send('click', { button, count })
+    },
+    async scroll(dx, dy) {
+      await client.send('scroll', { dx, dy })
+    },
+    async keySequence(sequence) {
+      await client.send('keySequence', { sequence })
+    },
+    async keyDown(key) {
+      await client.send('keyDown', { key })
+    },
+    async keyUp(key) {
+      await client.send('keyUp', { key })
+    },
+    async typeText(text) {
+      await client.send('typeText', { text })
+    },
+  }
+}
+
+export function createSwiftClipboardBridge(client: SwiftClientLike): ClipboardBridge {
+  return {
+    async readText() {
+      return client.send('readClipboard')
+    },
+    async writeText(text: string) {
+      await client.send('writeClipboard', { text })
+    },
+  }
+}
+
+export function createSwiftTccBridge(client: SwiftClientLike): TccBridge {
+  return {
+    async getState() {
+      return client.send('getTccState')
+    },
+    async openAccessibilitySettings() {
+      await client.send('openAccessibilitySettings')
+    },
+    async openScreenRecordingSettings() {
+      await client.send('openScreenRecordingSettings')
+    },
+  }
+}
+
+export function createSwiftHotkeyBridge(client: SwiftClientLike): HotkeyBridge {
+  return {
+    async registerEscapeAbort(sessionId: string) {
+      await client.send('registerEscapeAbort', { sessionId })
+    },
+    async markExpectedEscape(sessionId: string, windowMs: number) {
+      await client.send('markExpectedEscape', { sessionId, windowMs })
+    },
+    async unregisterEscapeAbort(sessionId: string) {
+      await client.send('unregisterEscapeAbort', { sessionId })
+    },
+    async consumeAbort(sessionId: string) {
+      return client.send<boolean>('consumeAbort', { sessionId })
+    },
+  }
+}
+
+export function createSwiftRunLoopPump(): RunLoopPump {
+  return {
+    retain() { return },
+    release() { return },
+  }
+}
+
+export function createSwiftNativeHost(
+  config: RuntimeConfig,
+  logger: Logger,
+  deps: { swiftClient?: SwiftClientLike } = {},
+): NativeHostAdapter {
   if (config.fakeMode) {
     return {
       screenshots: createFakeScreenshotBridge(),
@@ -189,111 +321,15 @@ export function createNativeHost(config: RuntimeConfig, logger: Logger): NativeH
     }
   }
 
-  const client = new SwiftBridgeClient(config, logger)
+  const client = deps.swiftClient ?? new SwiftBridgeClient(config, logger)
 
   return {
-    screenshots: {
-      async listDisplays() {
-        return client.send<DisplayInfo[]>('listDisplays')
-      },
-      async capture(options: CaptureOptions) {
-        return client.send<CaptureResult>('capture', options as unknown as Record<string, unknown>)
-      },
-    },
-    apps: {
-      async listInstalledApps() {
-        return client.send('listInstalledApps')
-      },
-      async listRunningApps() {
-        return client.send('listRunningApps')
-      },
-      async getFrontmostApp() {
-        return client.send('getFrontmostApp')
-      },
-      async appUnderPoint(x: number, y: number) {
-        return client.send('appUnderPoint', { x, y })
-      },
-      async openApplication(bundleId: string) {
-        await client.send('openApplication', { bundleId })
-      },
-      async hideApplications(bundleIds: string[]) {
-        return client.send('hideApplications', { bundleIds })
-      },
-      async unhideApplications(bundleIds: string[]) {
-        await client.send('unhideApplications', { bundleIds })
-      },
-      async findWindowDisplays(bundleIds: string[]) {
-        return client.send('findWindowDisplays', { bundleIds })
-      },
-    },
-    input: {
-      async getCursorPosition() {
-        return client.send('getCursorPosition')
-      },
-      async moveMouse(x: number, y: number) {
-        await client.send('moveMouse', { x, y })
-      },
-      async mouseDown(button) {
-        await client.send('mouseDown', { button })
-      },
-      async mouseUp(button) {
-        await client.send('mouseUp', { button })
-      },
-      async click(button, count) {
-        await client.send('click', { button, count })
-      },
-      async scroll(dx, dy) {
-        await client.send('scroll', { dx, dy })
-      },
-      async keySequence(sequence) {
-        await client.send('keySequence', { sequence })
-      },
-      async keyDown(key) {
-        await client.send('keyDown', { key })
-      },
-      async keyUp(key) {
-        await client.send('keyUp', { key })
-      },
-      async typeText(text) {
-        await client.send('typeText', { text })
-      },
-    },
-    clipboard: {
-      async readText() {
-        return client.send('readClipboard')
-      },
-      async writeText(text: string) {
-        await client.send('writeClipboard', { text })
-      },
-    },
-    tcc: {
-      async getState() {
-        return client.send('getTccState')
-      },
-      async openAccessibilitySettings() {
-        await client.send('openAccessibilitySettings')
-      },
-      async openScreenRecordingSettings() {
-        await client.send('openScreenRecordingSettings')
-      },
-    },
-    hotkeys: {
-      async registerEscapeAbort(sessionId: string) {
-        await client.send('registerEscapeAbort', { sessionId })
-      },
-      async markExpectedEscape(sessionId: string, windowMs: number) {
-        await client.send('markExpectedEscape', { sessionId, windowMs })
-      },
-      async unregisterEscapeAbort(sessionId: string) {
-        await client.send('unregisterEscapeAbort', { sessionId })
-      },
-      async consumeAbort(sessionId: string) {
-        return client.send<boolean>('consumeAbort', { sessionId })
-      },
-    },
-    runLoop: {
-      retain() { return },
-      release() { return },
-    },
+    screenshots: createSwiftScreenshotBridge(client),
+    apps: createSwiftAppBridge(client),
+    input: createSwiftInputBridge(client),
+    clipboard: createSwiftClipboardBridge(client),
+    tcc: createSwiftTccBridge(client),
+    hotkeys: createSwiftHotkeyBridge(client),
+    runLoop: createSwiftRunLoopPump(),
   }
 }

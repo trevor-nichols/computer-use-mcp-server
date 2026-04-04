@@ -1,3 +1,5 @@
+export type InputBackend = 'rust' | 'swift' | 'fake'
+
 export interface GrantFlags {
   clipboardRead: boolean
   clipboardWrite: boolean
@@ -91,6 +93,12 @@ export interface CursorPosition {
   y: number
 }
 
+/**
+ * Stable desktop-input contract consumed by the MCP tools.
+ *
+ * Backend-specific details must stay behind this boundary so `src/tools/*`
+ * remains backend-agnostic across Rust, Swift, and fake input implementations.
+ */
 export interface InputBridge {
   getCursorPosition(): Promise<CursorPosition>
   moveMouse(x: number, y: number): Promise<void>

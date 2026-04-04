@@ -54,6 +54,8 @@ enum ResolvedInputKey: Equatable {
     }
 }
 
+// Legacy parity reference for the Rust input backend. Keep aliases and chord
+// semantics synchronized with packages/native-input/src/keymap.rs.
 enum InputKeyResolver {
     static func resolveKey(_ rawKey: String) -> ResolvedInputKey? {
         guard let normalizedKey = normalizeToken(rawKey) else {

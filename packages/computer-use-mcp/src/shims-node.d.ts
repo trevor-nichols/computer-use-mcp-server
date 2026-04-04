@@ -1,3 +1,6 @@
+declare module 'node:module' {
+  export const createRequire: any
+}
 declare module 'node:os' {
   const os: any
   export default os
@@ -49,3 +52,7 @@ declare function setTimeout(handler: (...args: any[]) => void, timeout?: number,
 declare function clearTimeout(timeoutId: any): void
 declare function setInterval(handler: (...args: any[]) => void, timeout?: number, ...args: any[]): any
 declare function clearInterval(timeoutId: any): void
+
+interface ImportMeta {
+  url: string
+}

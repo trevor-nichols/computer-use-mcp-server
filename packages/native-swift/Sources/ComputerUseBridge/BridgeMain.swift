@@ -61,6 +61,8 @@ struct ComputerUseBridgeMain {
         case "findWindowDisplays":
             return AppService.findWindowDisplays(bundleIds: stringArrayParam(params, "bundleIds"))
 
+        // Legacy Swift input fallback: keep these input RPCs available until the
+        // Rust backend has been the default for at least one stable release cycle.
         case "getCursorPosition":
             return InputService.getCursorPosition()
 
@@ -106,6 +108,7 @@ struct ComputerUseBridgeMain {
             InputService.typeText(stringParam(params, "text") ?? "")
             return [:]
 
+        // End legacy Swift input fallback block.
         case "readClipboard":
             return ClipboardService.readText()
 

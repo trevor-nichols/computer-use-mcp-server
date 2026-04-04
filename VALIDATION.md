@@ -5,24 +5,36 @@
 ### Node / TypeScript
 - `npm run build`
 - `npm test`
+- `npm ci --ignore-scripts`
+
+### Rust input backend
+- `npm --prefix packages/native-input test`
+- `npm --prefix packages/native-input run build`
 
 ### Swift
 - `swift test --package-path packages/native-swift`
 - `swift build --package-path packages/native-swift -c release`
 - `swift build --package-path packages/approval-ui-macos -c release`
 
-### Test results
-- `npm test`: 65 / 65 tests passed
-- `swift test --package-path packages/native-swift`: 9 / 9 tests passed
-- includes a stdio end-to-end test against the built server in fake mode
-- includes Streamable HTTP transport coverage, including client-supplied session hint handling
-- includes approval coordinator coverage for both local and host-callback approval paths
-- includes shared-scope coverage for `computer_batch`
-- includes screenshot fallback and capture-scope coverage
-- includes capture file storage and cleanup coverage for `imagePath`-based screenshot delivery
-- includes action-scope filtering coverage for target-display app exclusion
-- includes native key normalization coverage for function keys, navigation aliases, punctuation aliases, numpad keys, and modifier aliases
-- includes native installed-app discovery coverage for nested `.app` bundles and duplicate-bundle root precedence
+## Test results
+
+- `npm test`: 73 / 73 tests passed
+- `swift test --package-path packages/native-swift`: 10 / 10 tests passed
+- `npm --prefix packages/native-input test`: 12 / 12 tests passed
+- `npm ci --ignore-scripts`: passed with lockfile/package sync
+
+Coverage highlights:
+
+- stdio end-to-end test against the built server in fake mode
+- Streamable HTTP coverage including client-supplied session hint handling
+- approval coordinator coverage for local UI and host-callback paths
+- shared-scope coverage for `computer_batch`
+- screenshot fallback and capture-scope coverage
+- capture storage and cleanup coverage with inline MCP image outputs plus `capture_metadata` lookup
+- action-scope filtering coverage for target-display app exclusion
+- key normalization coverage for function keys, navigation aliases, punctuation aliases, numpad keys, and modifier aliases
+- native app discovery coverage for nested `.app` bundles and duplicate-bundle root precedence
+- input backend routing and Rust bridge loading/fail-fast coverage
 
 ## Implemented areas from the remaining spec gap list
 
@@ -60,6 +72,9 @@
 - host callback integration
   - transport-level server-to-client request support
   - host SDK callback constants and initialize metadata helpers
+- backend split
+  - native host routing for `swift`, `rust`, and `fake` input backends
+  - Rust input backend package integration via `@agenai/native-input`
 
 ## Live macOS validation completed
 
@@ -84,6 +99,22 @@
 - `screenshot` and `zoom` in real mode, including runs with both:
   - `COMPUTER_USE_HIDE_DISALLOWED=0` and `COMPUTER_USE_EXCLUDE_DISALLOWED_SCREENSHOTS=1`
   - `COMPUTER_USE_HIDE_DISALLOWED=1` and `COMPUTER_USE_EXCLUDE_DISALLOWED_SCREENSHOTS=1`
+- TextEdit smoke flow validated through Computer Use MCP tools:
+  - `request_access`
+  - `open_application`
+  - `key` (`command+n`, `command+a`, `command+c`)
+  - `type`
+  - `read_clipboard`
+  - `scroll`
+  - `left_click_drag`
+
+## Operational note
+
+`request_access` in local/hybrid approval modes requires the `ApprovalUIBridge` helper binary.
+
+If the helper is unavailable, approval calls fail closed with:
+
+`Approval helper binary is not available. Build approval-ui-macos or set COMPUTER_USE_APPROVAL_UI_PATH.`
 
 ## Screenshot caveat
 
@@ -101,5 +132,5 @@ That recovery path was validated live and makes `screenshot` and `zoom` complete
 ## Still worth validating manually on a Mac
 
 - physical Escape global abort against real desktop actions
-- broader drag, scroll, key, and hold-key behavior across a wider range of native apps, including the newly added function, navigation, punctuation, and standalone modifier keys
+- broader drag, scroll, key, and hold-key behavior across a wider range of native apps
 - direct ScreenCaptureKit exclusion reliability on other Macs and app/window combinations

@@ -1,0 +1,14 @@
+{
+  "name": "@agenai/native-input",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "build": "node ./scripts/build-addon.mjs release",
+    "build:debug": "node ./scripts/build-addon.mjs debug",
+    "clean": "node -e \"require('node:fs').rmSync('native-input.node', { force: true })\"",
+    "test": "cargo test"
+  }
+}

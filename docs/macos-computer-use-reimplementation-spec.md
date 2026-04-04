@@ -9,6 +9,7 @@ The current repo implementation has diverged in a few important ways:
 - the live file layout is documented in `SNAPSHOT.md`
 - the current capture delivery contract is documented in `docs/capture-asset-reference-execution-plan.md`
 - `screenshot` and `zoom` now attach inline images, while `capture_metadata` returns the saved file path and geometry metadata for a prior `captureId`
+- `@agenai/native-input` is now implemented as an optional Rust input backend selected with `COMPUTER_USE_INPUT_BACKEND=rust` (Swift remains available as default/fallback)
 
 Use this document for design rationale and original goals, not as the exact source of truth for the current file tree or capture payload shape.
 

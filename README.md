@@ -11,7 +11,7 @@ This repository implements:
 - session-owned state
 - desktop lock
 - permission and app approval coordination
-- macOS native helper seam for screenshots, TCC, input, apps, and clipboard
+- native host seam with Swift bridge services and a selectable input backend (`swift`, `rust`, `fake`)
 - fake mode for development and testing on non-macOS hosts
 
 ## Capture contract
@@ -77,44 +77,52 @@ The server does not expose capture delivery through MCP `resources/read`. Screen
 - fake native mode
 - unit tests and transport end-to-end tests using Node's built-in test runner
 
-### Implemented for macOS, not compiled here
+### Native backends on macOS
 
-- Swift native bridge executable:
+- Swift native bridge executable (`ComputerUseBridge`) for:
   - ScreenCaptureKit screenshots
   - TCC checks and System Settings deep links
   - NSWorkspace app operations
-  - CGEvent-based mouse and keyboard injection
+  - CGEvent-based mouse and keyboard injection (legacy fallback input path)
   - NSPasteboard clipboard access
   - running app and window/display inspection
 
-### Included but not wired as the default runtime yet
+- Rust input backend package (`@agenai/native-input`) for:
+  - optional desktop input routing via `COMPUTER_USE_INPUT_BACKEND=rust`
+  - mouse, key, type, and scroll injection through a local N-API addon
 
-- approval UI bridge package
+### Supporting packages
+
+- approval UI bridge package (`ApprovalUIBridge`) for local request prompts
 - host SDK stubs
-- Rust placeholder package reserved for a future input-port if we move off the pure Swift path
 
 ## Important note
 
 The TypeScript server has a runnable fake mode for development and testing.
 
-The real macOS path requires building the native Swift helper on a Mac before starting the MCP server in real mode.
+The real macOS path requires:
+
+- the Swift bridge (`ComputerUseBridge`) for screenshots/apps/TCC/clipboard/hotkeys
+- the approval helper (`ApprovalUIBridge`) for local `request_access` prompts
+- optionally, the Rust input addon when selecting `COMPUTER_USE_INPUT_BACKEND=rust`
 
 ## Architecture
 
 ```text
 agent / MCP client
   -> stdio MCP server (TypeScript)
-    -> tool registry + session store + approval coordinator + desktop lock
-      -> native bridge client
-        -> ComputerUseBridge (Swift executable)
-          -> ScreenCaptureKit / NSWorkspace / CoreGraphics / ApplicationServices
+    -> tool registry + session store + approval coordinator + desktop lock + native host selector
+      -> Swift bridge client (screenshots/apps/TCC/clipboard/hotkeys)
+      -> input backend (swift|rust|fake)
+        -> ComputerUseBridge (Swift executable) OR @agenai/native-input (Rust addon)
 ```
 
 ## Current design choices
 
-- pure Swift was chosen for the first native bridge pass to reduce cross-language complexity
+- Swift remains the default integrated native bridge path for broad macOS surface area
+- Rust input is available as an additive backend choice for input-focused iteration
 - the Node server keeps the MCP surface thin
-- the helper executable owns AppKit / ScreenCaptureKit / CoreGraphics interactions
+- Swift helper executable owns AppKit / ScreenCaptureKit / CoreGraphics interactions outside input-addon overrides
 - the Node process does not need a Cocoa run-loop pump because native work happens in the helper process
 
 ## Build
@@ -131,6 +139,13 @@ npm test
 ```bash
 swift build --package-path packages/native-swift -c release
 swift build --package-path packages/approval-ui-macos -c release
+```
+
+### Optional Rust input backend on macOS
+
+```bash
+npm --prefix packages/native-input run build
+npm --prefix packages/native-input test
 ```
 
 ### Run fake mode
@@ -152,12 +167,14 @@ Optional environment variables:
 - `COMPUTER_USE_CAPTURE_ASSET_ROOT=/custom/path/captures`
 - `COMPUTER_USE_SWIFT_BRIDGE_PATH=/absolute/path/to/ComputerUseBridge`
 - `COMPUTER_USE_APPROVAL_UI_PATH=/absolute/path/to/ApprovalUIBridge`
+- `COMPUTER_USE_INPUT_BACKEND=swift|rust|fake`
+- `COMPUTER_USE_RUST_INPUT_PATH=/absolute/path/to/native-input.node`
 
 ## Repo map
 
-- `docs/` — spec, implementation plan, starter canvas, and Claude Code notes
+- `docs/` — historical planning/spec documents plus current capture contract note
 - `packages/computer-use-mcp/` — TypeScript server
 - `packages/native-swift/` — real macOS bridge executable
 - `packages/approval-ui-macos/` — local approval helper executable
 - `packages/host-sdk/` — host callback contract stubs
-- `packages/native-input/` — reserved for a future Rust input port
+- `packages/native-input/` — Rust N-API input backend package

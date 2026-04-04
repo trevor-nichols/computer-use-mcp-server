@@ -1,5 +1,6 @@
 import os from 'node:os'
 import path from 'node:path'
+import type { InputBackend } from './native/bridgeTypes.js'
 
 export interface RuntimeConfig {
   serverName: string
@@ -30,8 +31,10 @@ export interface RuntimeConfig {
   streamableHttpPort: number
   streamableHttpRequireOriginValidation: boolean
   streamableHttpAllowedOrigins: string[]
+  inputBackend: InputBackend
   swiftBridgePath?: string
   approvalUiPath?: string
+  rustInputModulePath?: string
 }
 
 function parseBoolean(value: string | undefined, fallback: boolean): boolean {
@@ -53,17 +56,32 @@ function parseCsv(value: string | undefined): string[] {
     .filter(Boolean)
 }
 
+function parseInputBackend(value: string | undefined, fallback: InputBackend): InputBackend {
+  switch (value?.trim().toLowerCase()) {
+    case 'rust':
+    case 'swift':
+    case 'fake':
+      return value.trim().toLowerCase() as InputBackend
+    default:
+      return fallback
+  }
+}
+
 export function loadConfig(): RuntimeConfig {
   const repoRoot = process.cwd()
   const home = os.homedir()
+  const fakeMode = parseBoolean(process.env.COMPUTER_USE_FAKE, false)
   const daemonMode = parseBoolean(process.env.COMPUTER_USE_DAEMON, false)
   const enableStreamableHttp = parseBoolean(process.env.COMPUTER_USE_ENABLE_HTTP, daemonMode)
   const enableStdio = parseBoolean(process.env.COMPUTER_USE_ENABLE_STDIO, !daemonMode)
+  const inputBackend = fakeMode
+    ? 'fake'
+    : parseInputBackend(process.env.COMPUTER_USE_INPUT_BACKEND, 'swift')
 
   return {
     serverName: 'computer-use',
     serverVersion: '0.2.0',
-    fakeMode: parseBoolean(process.env.COMPUTER_USE_FAKE, false),
+    fakeMode,
     repoRoot,
     lockPath: process.env.COMPUTER_USE_LOCK_PATH ?? path.join(home, '.computer-use-mcp', 'desktop.lock'),
     captureAssetRoot: process.env.COMPUTER_USE_CAPTURE_ASSET_ROOT ?? path.join(home, '.computer-use-mcp', 'assets'),
@@ -89,7 +107,9 @@ export function loadConfig(): RuntimeConfig {
     streamableHttpPort: parseNumber(process.env.COMPUTER_USE_HTTP_PORT, 3900),
     streamableHttpRequireOriginValidation: parseBoolean(process.env.COMPUTER_USE_HTTP_VALIDATE_ORIGIN, true),
     streamableHttpAllowedOrigins: parseCsv(process.env.COMPUTER_USE_HTTP_ALLOWED_ORIGINS),
+    inputBackend,
     swiftBridgePath: process.env.COMPUTER_USE_SWIFT_BRIDGE_PATH,
     approvalUiPath: process.env.COMPUTER_USE_APPROVAL_UI_PATH,
+    rustInputModulePath: process.env.COMPUTER_USE_RUST_INPUT_PATH,
   }
 }

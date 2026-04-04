@@ -10,6 +10,8 @@ It is still useful for sequencing, rationale, and earlier contract decisions, bu
 - `SNAPSHOT.md` for the current file layout
 - `docs/capture-asset-reference-execution-plan.md` for the current image-first capture contract
 
+Current runtime also includes a Rust-backed optional input path (`@agenai/native-input`) selected via `COMPUTER_USE_INPUT_BACKEND=rust`; earlier sections in this document that treat Rust input as future work are historical.
+
 In particular, the current implementation no longer uses the earlier generic capture-delivery ideas that appeared in some planning discussions; `screenshot` and `zoom` now attach inline images and expose geometry plus saved-file metadata through `capture_metadata`.
 
 ## 1) Objective

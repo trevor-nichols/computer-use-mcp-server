@@ -1,4 +1,4 @@
-You are an expert senior systems engineer responsible for the `computer-use-mcp-server` monorepo: a standalone macOS-first Computer Use MCP server with a TypeScript orchestration layer and native Swift bridge executables.
+You are an expert senior systems engineer responsible for the `computer-use-mcp-server` monorepo: a standalone macOS-first Computer Use MCP server with a TypeScript orchestration layer, native Swift bridge executables, and a Rust input backend option.
 
 ## Development Principles
 
@@ -42,7 +42,7 @@ Assume:
 - TS module + resolution: `NodeNext`
 - Swift tools: `5.9`
 - Swift platform target: `macOS 13+`
-- Rust placeholder crate present (`edition = 2021`) but not production input path yet
+- Rust (`edition = 2021`) powers the optional `@agenai/native-input` backend for desktop input
 
 ## Monorepo Packages
 
@@ -50,7 +50,7 @@ Assume:
 - `packages/native-swift`: `ComputerUseBridge` executable for real macOS native ops
 - `packages/approval-ui-macos`: `ApprovalUIBridge` executable for local approval flows
 - `packages/host-sdk`: host callback/session metadata helpers
-- `packages/native-input`: reserved placeholder for future input-port path
+- `packages/native-input`: Rust N-API desktop input backend (`@agenai/native-input`)
 
 ## Runtime Configuration Constraints
 
@@ -63,6 +63,8 @@ Treat these env vars as public contract and keep backward compatibility unless e
 - `COMPUTER_USE_LOCK_PATH`
 - `COMPUTER_USE_SWIFT_BRIDGE_PATH`
 - `COMPUTER_USE_APPROVAL_UI_PATH`
+- `COMPUTER_USE_INPUT_BACKEND`
+- `COMPUTER_USE_RUST_INPUT_PATH`
 - `COMPUTER_USE_APPROVAL_MODE`
 - `COMPUTER_USE_HIDE_DISALLOWED`
 - `COMPUTER_USE_EXCLUDE_DISALLOWED_SCREENSHOTS`
@@ -74,6 +76,9 @@ Treat these env vars as public contract and keep backward compatibility unless e
 - Root build: `npm run build`
 - Root test: `npm test`
 - Tests execute built JS from `dist/computer-use-mcp/test/*.test.js` using Node built-in test runner.
+- Rust input tests/build:
+  - `npm --prefix packages/native-input test`
+  - `npm --prefix packages/native-input run build`
 - Swift binaries are built independently with:
   - `swift build --package-path packages/native-swift -c release`
   - `swift build --package-path packages/approval-ui-macos -c release`
@@ -109,7 +114,7 @@ Treat these env vars as public contract and keep backward compatibility unless e
 
 Runtime pipeline:
 
-`MCP client -> TypeScript server -> session/approval/lock/tool orchestration -> native bridge client -> Swift helper`
+`MCP client -> TypeScript server -> session/approval/lock/tool orchestration -> native host selector -> Swift helper services + selectable input backend (swift/rust/fake)`
 
 ### Key Runtime Modules (TypeScript)
 
@@ -121,13 +126,17 @@ Runtime pipeline:
 - `src/transforms/*`: coordinate and screenshot sizing model
 - `src/errors/*`: typed errors + protocol error mapping
 
-### Native Responsibilities (Swift)
+### Native Responsibilities (Swift + Rust Input Backend)
 
-- screenshot capture
-- TCC checks and deep-link helpers
-- app operations (open/hide/unhide/list)
-- input injection and hotkey abort mechanics
-- display metadata/targeting support
+- Swift bridge responsibilities:
+  - screenshot capture
+  - TCC checks and deep-link helpers
+  - app operations (open/hide/unhide/list)
+  - clipboard and hotkey abort mechanics
+  - display metadata/targeting support
+- Input backend responsibilities:
+  - default: Swift input path
+  - optional: Rust `@agenai/native-input` path for cursor, mouse, key, scroll, and type injection
 
 ## 5.2 Implementation Patterns
 
@@ -171,6 +180,7 @@ Runtime pipeline:
   - batch execution semantics
   - transforms (`coordinates`, `screenshotSizing`)
   - transport/session behavior
+  - input backend routing and native-input bridge loading behavior
 - For tool behavior changes, prefer at least one targeted test in `packages/computer-use-mcp/test`.
 
 ### Behavioral Compatibility Priorities
@@ -284,11 +294,11 @@ Mapped via `toCallToolErrorResult` to:
 
 <project_structure>
 ├── docs
-│   ├── claude-code-reference-notes.md
+│   ├── capture-asset-reference-execution-plan.md
 │   ├── macos-computer-use-implementation-plan.md
 │   ├── macos-computer-use-reimplementation-spec.md
 │   ├── macos-computer-use-starter-code-canvas.md
-│   └── target.md
+│   └── ...
 ├── packages
 │   ├── approval-ui-macos
 │   │   ├── .build

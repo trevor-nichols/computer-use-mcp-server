@@ -4,6 +4,8 @@ import Foundation
 import AppKit
 import CoreGraphics
 
+// Legacy Swift input fallback retained during the Rust input migration. Keep this
+// behavior stable unless an equivalent parity fix lands in the Rust backend.
 enum InputService {
     private static var activeModifierCounts: [InputModifierKey: Int] = [:]
 
