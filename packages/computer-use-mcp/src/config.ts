@@ -86,7 +86,7 @@ export function loadConfig(): RuntimeConfig {
     lockPath: process.env.COMPUTER_USE_LOCK_PATH ?? path.join(home, '.computer-use-mcp', 'desktop.lock'),
     captureAssetRoot: process.env.COMPUTER_USE_CAPTURE_ASSET_ROOT ?? path.join(home, '.computer-use-mcp', 'assets'),
     protocolVersion: '2025-11-25',
-    supportedProtocolVersions: ['2025-03-26', '2025-06-18', '2025-11-25'],
+    supportedProtocolVersions: ['2025-11-25'],
     approvalDefaultMode: (process.env.COMPUTER_USE_APPROVAL_MODE as RuntimeConfig['approvalDefaultMode'] | undefined) ?? 'hybrid',
     approvalRequestTimeoutMs: parseNumber(process.env.COMPUTER_USE_APPROVAL_TIMEOUT_MS, 15_000),
     screenshotDefaultFormat: (process.env.COMPUTER_USE_SCREENSHOT_FORMAT as 'jpeg' | 'png' | undefined) ?? 'jpeg',
