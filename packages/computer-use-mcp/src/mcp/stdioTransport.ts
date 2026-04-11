@@ -2,15 +2,24 @@ import { createInterface } from 'node:readline'
 import { randomUUID } from 'node:crypto'
 import type { Logger } from '../observability/logger.js'
 import { BaseClientConnection, type TransportAdapter } from './transport.js'
-import { failure, isJsonRpcRequest, isJsonRpcResponse, type JsonRpcRequest } from './jsonRpc.js'
+import {
+  failure,
+  isJsonRpcNotification,
+  isJsonRpcRequest,
+  isJsonRpcResponse,
+  readJsonRpcId,
+  type JsonRpcNotification,
+  type JsonRpcRequest,
+} from './jsonRpc.js'
 import type { ComputerUseMcpServer } from './server.js'
+import { NotificationRejectedError } from './protocolErrors.js'
 
 class StdioConnection extends BaseClientConnection {
   constructor() {
     super(`stdio-connection:${process.pid}`, 'stdio', `stdio:${randomUUID()}`)
   }
 
-  protected async sendOutbound(message: JsonRpcRequest): Promise<void> {
+  protected async sendOutbound(message: JsonRpcRequest | JsonRpcNotification): Promise<void> {
     process.stdout.write(`${JSON.stringify(message)}\n`)
   }
 
@@ -63,25 +72,19 @@ class StdioTransport implements TransportAdapter {
 
     try {
       const parsed = JSON.parse(trimmed) as unknown
+
       if (Array.isArray(parsed)) {
-        const results = []
-        for (const item of parsed) {
-          const result = await handleMessage(item, this.server, this.connection)
-          if (result) results.push(result)
-        }
-        if (results.length > 0) {
-          process.stdout.write(`${JSON.stringify(results)}\n`)
-        }
+        writeStdioResponse(failure(undefined, -32600, 'JSON-RPC batches are not supported.'))
         return
       }
 
-      const response = await handleMessage(parsed, this.server, this.connection)
+      const response = await handleMessage(parsed, this.server, this.connection, this.logger)
       if (response) {
-        process.stdout.write(`${JSON.stringify(response)}\n`)
+        writeStdioResponse(response)
       }
     } catch (error) {
       this.logger.error('stdio transport failed to process line', error)
-      process.stdout.write(`${JSON.stringify(failure(null, -32700, 'Parse error'))}\n`)
+      writeStdioResponse(failure(undefined, -32700, 'Parse error'))
     }
   }
 }
@@ -92,15 +95,50 @@ export async function connectStdioTransport(server: ComputerUseMcpServer, logger
   return transport
 }
 
-async function handleMessage(parsed: unknown, server: ComputerUseMcpServer, connection: StdioConnection) {
+async function handleMessage(
+  parsed: unknown,
+  server: ComputerUseMcpServer,
+  connection: StdioConnection,
+  logger: Logger,
+) {
   if (isJsonRpcResponse(parsed)) {
     connection.handleJsonRpcResponse(parsed)
     return undefined
   }
 
-  if (!isJsonRpcRequest(parsed)) {
-    return failure(null, -32600, 'Invalid Request')
+  if (isJsonRpcNotification(parsed)) {
+    try {
+      await server.handleNotification(parsed, connection)
+    } catch (error) {
+      logger.warn('stdio transport rejected notification', serializeNotificationError(parsed.method, error))
+    }
+    return undefined
   }
 
-  return server.handle(parsed, connection)
+  if (isJsonRpcRequest(parsed)) {
+    return server.handleRequest(parsed, connection)
+  }
+
+  return failure(readJsonRpcId(parsed), -32600, 'Invalid Request')
+}
+
+function serializeNotificationError(method: string, error: unknown) {
+  if (error instanceof NotificationRejectedError) {
+    return {
+      method,
+      message: error.message,
+      httpStatus: error.httpStatus,
+      jsonRpcCode: error.jsonRpcCode,
+      data: error.data,
+    }
+  }
+
+  return {
+    method,
+    message: error instanceof Error ? error.message : String(error),
+  }
+}
+
+function writeStdioResponse(response: unknown): void {
+  process.stdout.write(`${JSON.stringify(response)}\n`)
 }

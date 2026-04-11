@@ -110,3 +110,11 @@ export class AbortRequestedError extends Error {
     this.name = 'AbortRequestedError'
   }
 }
+
+
+export class ToolInputValidationError extends Error {
+  constructor(message = 'Tool input validation failed.') {
+    super(message)
+    this.name = 'ToolInputValidationError'
+  }
+}

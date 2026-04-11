@@ -11,6 +11,9 @@ import { executeTypeText } from './typeText.js'
 import { readClipboard, writeClipboard } from './clipboard.js'
 import { executeWait } from './wait.js'
 import { executeOpenApplication } from './applications.js'
+import { batchableToolInputSchemas } from '../mcp/toolSchemas.js'
+import { compileSchemaValidator, type ValidationIssue } from '../mcp/schemaValidator.js'
+import { ToolInputValidationError } from '../errors/errorTypes.js'
 
 export interface BatchAction {
   tool: string
@@ -20,6 +23,10 @@ export interface BatchAction {
 export interface ComputerBatchArgs {
   actions: BatchAction[]
 }
+
+const batchableToolValidators = Object.fromEntries(
+  Object.entries(batchableToolInputSchemas).map(([tool, schema]) => [tool, compileSchemaValidator(schema)]),
+)
 
 export async function computerBatchTool(ctx: ToolExecutionContext, args: ComputerBatchArgs) {
   return withActionScope(
@@ -51,29 +58,40 @@ export async function computerBatchTool(ctx: ToolExecutionContext, args: Compute
 }
 
 async function executeBatchAction(ctx: ToolExecutionContext, action: BatchAction, scope: ActionExecutionContext) {
+  const validator = batchableToolValidators[action.tool]
+  if (!validator) {
+    throw new ToolInputValidationError(`Unsupported batch action: ${action.tool}`)
+  }
+
+  const actionArguments = action.arguments ?? {}
+  const validation = validator.validate(actionArguments)
+  if (!validation.valid) {
+    throw new ToolInputValidationError(`${action.tool}: ${formatValidationIssues(validation.issues)}`)
+  }
+
   switch (action.tool) {
     case 'mouse_move':
-      return executeMouseMove(ctx, action.arguments as any, scope)
+      return executeMouseMove(ctx, actionArguments as any, scope)
     case 'left_click':
-      return performClick(ctx, action.arguments as any, 'left', 1, scope)
+      return performClick(ctx, actionArguments as any, 'left', 1, scope)
     case 'right_click':
-      return performClick(ctx, action.arguments as any, 'right', 1, scope)
+      return performClick(ctx, actionArguments as any, 'right', 1, scope)
     case 'middle_click':
-      return performClick(ctx, action.arguments as any, 'middle', 1, scope)
+      return performClick(ctx, actionArguments as any, 'middle', 1, scope)
     case 'double_click':
-      return performClick(ctx, action.arguments as any, 'left', 2, scope)
+      return performClick(ctx, actionArguments as any, 'left', 2, scope)
     case 'triple_click':
-      return performClick(ctx, action.arguments as any, 'left', 3, scope)
+      return performClick(ctx, actionArguments as any, 'left', 3, scope)
     case 'left_click_drag':
-      return executeLeftClickDrag(ctx, action.arguments as any, scope)
+      return executeLeftClickDrag(ctx, actionArguments as any, scope)
     case 'scroll':
-      return executeScroll(ctx, action.arguments as any, scope)
+      return executeScroll(ctx, actionArguments as any, scope)
     case 'key':
-      return executeKey(ctx, action.arguments as any, scope)
+      return executeKey(ctx, actionArguments as any, scope)
     case 'hold_key':
-      return executeHoldKey(ctx, action.arguments as any, scope)
+      return executeHoldKey(ctx, actionArguments as any, scope)
     case 'type':
-      return executeTypeText(ctx, action.arguments as any, scope)
+      return executeTypeText(ctx, actionArguments as any, scope)
     case 'read_clipboard': {
       const text = await readClipboard(ctx.runtime.nativeHost, ctx.session)
       return {
@@ -85,7 +103,7 @@ async function executeBatchAction(ctx: ToolExecutionContext, action: BatchAction
       }
     }
     case 'write_clipboard': {
-      const text = String((action.arguments ?? {}).text ?? '')
+      const text = String(actionArguments.text ?? '')
       await writeClipboard(ctx.runtime.nativeHost, ctx.session, text)
       return {
         content: [{ type: 'text', text: 'Updated clipboard text.' }],
@@ -96,10 +114,14 @@ async function executeBatchAction(ctx: ToolExecutionContext, action: BatchAction
       }
     }
     case 'wait':
-      return executeWait(ctx, action.arguments as any, scope)
+      return executeWait(ctx, actionArguments as any, scope)
     case 'open_application':
-      return executeOpenApplication(ctx, action.arguments as any)
+      return executeOpenApplication(ctx, actionArguments as any)
     default:
-      throw new Error(`Unsupported batch action: ${action.tool}`)
+      throw new ToolInputValidationError(`Unsupported batch action: ${action.tool}`)
   }
+}
+
+function formatValidationIssues(issues: ValidationIssue[]): string {
+  return issues.map(issue => `${issue.instancePath} ${issue.message}`.trim()).join('; ')
 }

@@ -56,7 +56,16 @@ test('ApprovalCoordinator can use host callback approvals in hybrid mode', async
       hostApprovalCapabilities: { appApproval: true, tccPromptRelay: true },
       transportName: 'stdio',
     },
+    protocolState: {
+      phase: 'ready',
+      initializeSeen: true,
+      initializedSeen: true,
+      negotiatedProtocolVersion: '2025-11-25',
+    },
     setMetadata() {},
+    markInitializeResponded() {},
+    markReady() {},
+    markClosed() {},
     async request(method, params) {
       if (method === 'computer_use/request_tcc_approval') {
         return {

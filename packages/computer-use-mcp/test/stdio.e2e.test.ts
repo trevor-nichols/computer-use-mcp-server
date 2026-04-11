@@ -37,7 +37,7 @@ test('stdio server exposes the computer-use tool surface and supports the fake s
     id: 1,
     method: 'initialize',
     params: {
-      protocolVersion: '2025-03-26',
+      protocolVersion: '2025-11-25',
       capabilities: {},
       clientInfo: { name: 'node-test', version: '0.1.0' },
     },

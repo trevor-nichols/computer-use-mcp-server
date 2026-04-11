@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
-import type { JsonRpcRequest, JsonRpcResponse } from './jsonRpc.js'
+import type { JsonRpcNotification, JsonRpcRequest, JsonRpcResponse } from './jsonRpc.js'
 import type { HostIdentity } from '../runtime/hostIdentity.js'
+import { createProtocolState, type LifecyclePhase, type ProtocolState } from './lifecycleState.js'
 
 export type ApprovalMode = 'local-ui' | 'host-callback' | 'hybrid'
 
@@ -25,7 +26,11 @@ export interface ClientConnection {
   readonly connectionId: string
   readonly transportName: string
   readonly metadata: ConnectionMetadata
+  readonly protocolState: ProtocolState
   setMetadata(update: Partial<Omit<ConnectionMetadata, 'connectionId' | 'transportName'>>): void
+  markInitializeResponded(protocolVersion: string): void
+  markReady(): void
+  markClosed(): void
   request(method: string, params?: unknown, timeoutMs?: number): Promise<unknown>
   notify(method: string, params?: unknown): Promise<void>
   handleJsonRpcResponse(message: JsonRpcResponse): boolean
@@ -53,6 +58,7 @@ export function createDefaultHostApprovalCapabilities(): HostApprovalCapabilitie
 
 export abstract class BaseClientConnection implements ClientConnection {
   readonly metadata: ConnectionMetadata
+  readonly protocolState = createProtocolState()
   private readonly pending = new Map<string, PendingServerRequest>()
 
   protected constructor(
@@ -96,6 +102,21 @@ export abstract class BaseClientConnection implements ClientConnection {
     }
   }
 
+  markInitializeResponded(protocolVersion: string): void {
+    this.protocolState.initializeSeen = true
+    this.protocolState.negotiatedProtocolVersion = protocolVersion
+    this.protocolState.phase = 'initialize_responded'
+  }
+
+  markReady(): void {
+    this.protocolState.initializedSeen = true
+    this.protocolState.phase = 'ready'
+  }
+
+  markClosed(): void {
+    this.protocolState.phase = 'closed'
+  }
+
   async request(method: string, params?: unknown, timeoutMs = 10_000): Promise<unknown> {
     const id = `server:${randomUUID()}`
     const payload: JsonRpcRequest = {
@@ -121,14 +142,19 @@ export abstract class BaseClientConnection implements ClientConnection {
   }
 
   async notify(method: string, params?: unknown): Promise<void> {
-    await this.sendOutbound({
+    const payload: JsonRpcNotification = {
       jsonrpc: '2.0',
       method,
       params,
-    })
+    }
+    await this.sendOutbound(payload)
   }
 
   handleJsonRpcResponse(message: JsonRpcResponse): boolean {
+    if (message.id === undefined) {
+      return false
+    }
+
     const key = String(message.id)
     const pending = this.pending.get(key)
     if (!pending) {
@@ -148,6 +174,8 @@ export abstract class BaseClientConnection implements ClientConnection {
   }
 
   async close(): Promise<void> {
+    this.markClosed()
+
     for (const [key, pending] of this.pending) {
       clearTimeout(pending.timer)
       pending.reject(new Error(`Connection ${this.connectionId} closed while waiting for ${key}`))
@@ -156,6 +184,10 @@ export abstract class BaseClientConnection implements ClientConnection {
     await this.closeTransport()
   }
 
-  protected abstract sendOutbound(message: JsonRpcRequest): Promise<void>
+  protected abstract sendOutbound(message: JsonRpcRequest | JsonRpcNotification): Promise<void>
   protected abstract closeTransport(): Promise<void>
+}
+
+export function isLifecyclePhase(connection: ClientConnection | undefined, phase: LifecyclePhase): boolean {
+  return connection?.protocolState.phase === phase
 }

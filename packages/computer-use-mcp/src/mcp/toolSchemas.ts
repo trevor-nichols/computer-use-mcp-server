@@ -1,4 +1,6 @@
-const allowedAppItem = {
+import type { JsonSchemaObject } from './schemaValidator.js'
+
+const allowedAppItem: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -9,7 +11,42 @@ const allowedAppItem = {
   required: ['bundleId', 'displayName'],
 }
 
-export const requestAccessSchema = {
+const grantFlagsSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    clipboardRead: { type: 'boolean' },
+    clipboardWrite: { type: 'boolean' },
+    systemKeyCombos: { type: 'boolean' },
+  },
+  required: ['clipboardRead', 'clipboardWrite', 'systemKeyCombos'],
+}
+
+const tccStateSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    accessibility: { type: 'boolean' },
+    screenRecording: { type: 'boolean' },
+  },
+  required: ['accessibility', 'screenRecording'],
+}
+
+const pointStructuredContentProperties: Record<string, unknown> = {
+  x: { type: 'number' },
+  y: { type: 'number' },
+}
+
+const pointStructuredContentRequired = ['x', 'y']
+
+const pointStructuredContentSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: pointStructuredContentProperties,
+  required: pointStructuredContentRequired,
+}
+
+export const requestAccessSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -31,7 +68,26 @@ export const requestAccessSchema = {
   },
 }
 
-export const screenshotSchema = {
+export const requestAccessOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    grantedApps: {
+      type: 'array',
+      items: allowedAppItem,
+    },
+    deniedApps: {
+      type: 'array',
+      items: allowedAppItem,
+    },
+    effectiveFlags: grantFlagsSchema,
+    tccState: tccStateSchema,
+  },
+  required: ['ok', 'grantedApps', 'deniedApps', 'effectiveFlags', 'tccState'],
+}
+
+export const screenshotSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -39,7 +95,7 @@ export const screenshotSchema = {
   },
 }
 
-export const displayInfoSchema = {
+export const displayInfoSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -55,17 +111,14 @@ export const displayInfoSchema = {
   required: ['displayId', 'originX', 'originY', 'width', 'height', 'scaleFactor', 'isPrimary'],
 }
 
-export const listDisplaysOutputSchema = {
+export const listDisplaysOutputSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
     ok: { type: 'boolean' },
     displayPinnedByModel: { type: 'boolean' },
     selectedDisplayId: {
-      anyOf: [
-        { type: 'integer' },
-        { type: 'null' },
-      ],
+      anyOf: [{ type: 'integer' }, { type: 'null' }],
     },
     displays: {
       type: 'array',
@@ -75,30 +128,85 @@ export const listDisplaysOutputSchema = {
   required: ['ok', 'displayPinnedByModel', 'selectedDisplayId', 'displays'],
 }
 
-export const selectDisplaySchema = {
-  type: 'object',
-  additionalProperties: false,
-  properties: {
-    displayId: { type: 'integer' },
-    displayName: { type: 'string' },
-    auto: { type: 'boolean' },
-  },
+export const selectDisplaySchema: JsonSchemaObject = {
+  oneOf: [
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        displayId: { type: 'integer' },
+      },
+      required: ['displayId'],
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        displayName: { type: 'string', minLength: 1 },
+      },
+      required: ['displayName'],
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        auto: { const: true },
+      },
+      required: ['auto'],
+    },
+  ],
 }
 
-export const zoomSchema = {
+export const selectDisplayOutputSchema: JsonSchemaObject = {
+  oneOf: [
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        ok: { type: 'boolean' },
+        mode: { const: 'auto' },
+        displayPinnedByModel: { const: false },
+        selectedDisplayId: { type: 'null' },
+        availableDisplays: {
+          type: 'array',
+          items: displayInfoSchema,
+        },
+      },
+      required: ['ok', 'mode', 'displayPinnedByModel', 'selectedDisplayId', 'availableDisplays'],
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        ok: { type: 'boolean' },
+        mode: { const: 'pinned' },
+        displayPinnedByModel: { const: true },
+        selectedDisplayId: { type: 'integer' },
+        selectedDisplay: displayInfoSchema,
+        availableDisplays: {
+          type: 'array',
+          items: displayInfoSchema,
+        },
+      },
+      required: ['ok', 'mode', 'displayPinnedByModel', 'selectedDisplayId', 'selectedDisplay', 'availableDisplays'],
+    },
+  ],
+}
+
+export const zoomSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
     x: { type: 'number' },
     y: { type: 'number' },
-    width: { type: 'number' },
-    height: { type: 'number' },
+    width: { type: 'number', exclusiveMinimum: 0 },
+    height: { type: 'number', exclusiveMinimum: 0 },
     displayId: { type: 'integer' },
   },
   required: ['x', 'y', 'width', 'height'],
 }
 
-export const captureOutputSchema = {
+export const captureOutputSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -122,16 +230,16 @@ export const captureOutputSchema = {
   required: ['ok', 'captureId', 'imagePath', 'mimeType', 'width', 'height', 'displayId', 'originX', 'originY', 'excludedBundleIds'],
 }
 
-export const captureMetadataSchema = {
+export const captureMetadataSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    captureId: { type: 'string' },
+    captureId: { type: 'string', minLength: 1 },
   },
   required: ['captureId'],
 }
 
-export const pointSchema = {
+export const pointSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -141,19 +249,78 @@ export const pointSchema = {
   required: ['x', 'y'],
 }
 
-export const dragSchema = {
+export const cursorPositionOutputSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    fromX: { type: 'number' },
-    fromY: { type: 'number' },
-    toX: { type: 'number' },
-    toY: { type: 'number' },
+    ok: { type: 'boolean' },
+    ...pointStructuredContentProperties,
   },
-  required: ['toX', 'toY'],
+  required: ['ok', ...pointStructuredContentRequired],
 }
 
-export const scrollSchema = {
+export const pointOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    ...pointStructuredContentProperties,
+  },
+  required: ['ok', ...pointStructuredContentRequired],
+}
+
+export const clickOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    ...pointStructuredContentProperties,
+    button: { type: 'string', enum: ['left', 'right', 'middle'] },
+    count: { type: 'integer', enum: [1, 2, 3] },
+  },
+  required: ['ok', 'x', 'y', 'button', 'count'],
+}
+
+export const dragSchema: JsonSchemaObject = {
+  allOf: [
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        fromX: { type: 'number' },
+        fromY: { type: 'number' },
+        toX: { type: 'number' },
+        toY: { type: 'number' },
+      },
+      required: ['toX', 'toY'],
+    },
+    {
+      oneOf: [
+        {
+          not: {
+            anyOf: [{ required: ['fromX'] }, { required: ['fromY'] }],
+          },
+        },
+        {
+          required: ['fromX', 'fromY'],
+        },
+      ],
+    },
+  ],
+}
+
+export const dragOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    from: pointStructuredContentSchema,
+    to: pointStructuredContentSchema,
+  },
+  required: ['ok', 'from', 'to'],
+}
+
+export const scrollSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -165,7 +332,20 @@ export const scrollSchema = {
   required: ['x', 'y', 'dx', 'dy'],
 }
 
-export const typeTextSchema = {
+export const scrollOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    x: { type: 'number' },
+    y: { type: 'number' },
+    dx: { type: 'number' },
+    dy: { type: 'number' },
+  },
+  required: ['ok', 'x', 'y', 'dx', 'dy'],
+}
+
+export const typeTextSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -175,36 +355,91 @@ export const typeTextSchema = {
   required: ['text'],
 }
 
-export const keySchema = {
+export const typeTextOutputSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    sequence: { type: 'string' },
+    ok: { type: 'boolean' },
+    viaClipboard: { type: 'boolean' },
+  },
+  required: ['ok', 'viaClipboard'],
+}
+
+export const keySchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    sequence: { type: 'string', minLength: 1 },
     repeat: { type: 'integer', minimum: 1, maximum: 20, default: 1 },
   },
   required: ['sequence'],
 }
 
-export const holdKeySchema = {
+export const keyOutputSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    keys: { type: 'array', items: { type: 'string' }, minItems: 1 },
+    ok: { type: 'boolean' },
+    sequence: { type: 'string' },
+    repeat: { type: 'integer' },
+  },
+  required: ['ok', 'sequence', 'repeat'],
+}
+
+export const holdKeySchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    keys: { type: 'array', items: { type: 'string', minLength: 1 }, minItems: 1 },
     durationMs: { type: 'integer', minimum: 1, maximum: 10000 },
   },
   required: ['keys', 'durationMs'],
 }
 
-export const openApplicationSchema = {
+export const holdKeyOutputSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    bundleId: { type: 'string' },
+    ok: { type: 'boolean' },
+    keys: { type: 'array', items: { type: 'string' } },
+    durationMs: { type: 'integer' },
+  },
+  required: ['ok', 'keys', 'durationMs'],
+}
+
+export const openApplicationSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    bundleId: { type: 'string', minLength: 1 },
   },
   required: ['bundleId'],
 }
 
-export const searchApplicationsSchema = {
+export const openApplicationOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    bundleId: { type: 'string' },
+  },
+  required: ['ok', 'bundleId'],
+}
+
+export const listGrantedApplicationsOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    apps: {
+      type: 'array',
+      items: allowedAppItem,
+    },
+  },
+  required: ['ok', 'apps'],
+}
+
+export const searchApplicationsSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -220,7 +455,7 @@ export const searchApplicationsSchema = {
   required: ['query'],
 }
 
-export const searchApplicationsOutputSchema = {
+export const searchApplicationsOutputSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -241,7 +476,7 @@ export const searchApplicationsOutputSchema = {
   required: ['ok', 'query', 'source', 'limit', 'totalMatches', 'hasMore', 'apps'],
 }
 
-export const waitSchema = {
+export const waitSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -250,7 +485,17 @@ export const waitSchema = {
   required: ['durationMs'],
 }
 
-export const writeClipboardSchema = {
+export const waitOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    durationMs: { type: 'integer' },
+  },
+  required: ['ok', 'durationMs'],
+}
+
+export const writeClipboardSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -259,23 +504,99 @@ export const writeClipboardSchema = {
   required: ['text'],
 }
 
-export const computerBatchSchema = {
+export const clipboardOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    text: { type: 'string' },
+  },
+  required: ['ok', 'text'],
+}
+
+function batchActionSchema(tool: string, argumentsSchema: JsonSchemaObject, argumentsOptional = false): JsonSchemaObject {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      tool: { const: tool },
+      arguments: argumentsSchema,
+    },
+    required: argumentsOptional ? ['tool'] : ['tool', 'arguments'],
+  }
+}
+
+const noArgumentSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+}
+
+export const batchableToolInputSchemas: Record<string, JsonSchemaObject> = {
+  mouse_move: pointSchema,
+  left_click: pointSchema,
+  right_click: pointSchema,
+  middle_click: pointSchema,
+  double_click: pointSchema,
+  triple_click: pointSchema,
+  left_click_drag: dragSchema,
+  scroll: scrollSchema,
+  key: keySchema,
+  hold_key: holdKeySchema,
+  type: typeTextSchema,
+  read_clipboard: noArgumentSchema,
+  write_clipboard: writeClipboardSchema,
+  wait: waitSchema,
+  open_application: openApplicationSchema,
+}
+
+export const computerBatchSchema: JsonSchemaObject = {
   type: 'object',
   additionalProperties: false,
   properties: {
     actions: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        oneOf: [
+          batchActionSchema('mouse_move', pointSchema),
+          batchActionSchema('left_click', pointSchema),
+          batchActionSchema('right_click', pointSchema),
+          batchActionSchema('middle_click', pointSchema),
+          batchActionSchema('double_click', pointSchema),
+          batchActionSchema('triple_click', pointSchema),
+          batchActionSchema('left_click_drag', dragSchema),
+          batchActionSchema('scroll', scrollSchema),
+          batchActionSchema('key', keySchema),
+          batchActionSchema('hold_key', holdKeySchema),
+          batchActionSchema('type', typeTextSchema),
+          batchActionSchema('read_clipboard', noArgumentSchema, true),
+          batchActionSchema('write_clipboard', writeClipboardSchema),
+          batchActionSchema('wait', waitSchema),
+          batchActionSchema('open_application', openApplicationSchema),
+        ],
+      },
+    },
+  },
+  required: ['actions'],
+}
+
+export const computerBatchOutputSchema: JsonSchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    ok: { type: 'boolean' },
+    results: {
       type: 'array',
       items: {
         type: 'object',
         additionalProperties: false,
         properties: {
           tool: { type: 'string' },
-          arguments: { type: 'object' },
+          result: { type: 'object' },
         },
-        required: ['tool'],
+        required: ['tool', 'result'],
       },
-      minItems: 1,
     },
   },
-  required: ['actions'],
+  required: ['ok', 'results'],
 }
